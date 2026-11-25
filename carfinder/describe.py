@@ -17,7 +17,7 @@ ENV_PATH = Path(__file__).resolve().parents[1] / ".env"
 MODEL = "claude-haiku-5-5"
 STATES = ("ok", "kvar", "les")
 REPAIRS = ("nema", "mala", "velika")
-READING_VERSION = 6   # bump when the prompt or the answer changes, so every ad is read again
+READING_VERSION = 7   # bump when the prompt or the answer changes, so every ad is read again
 MAX_TEXT = 3000
 TIMEOUT_S = 60
 PHOTO_TIMEOUT_S = 20
@@ -38,9 +38,12 @@ Odredi stanje auta:
 - "ok": prodavac ne pominje nikakav kvar ni oštećenje i na fotografijama se ne vidi nijedno
 Odredi i koliku popravku to traži:
 - "velika": veći udes bez oštećene konstrukcije (više panela, hladnjaci, vešanje), smrskan ili zgnječen prednji
-  ili zadnji kraj (branik, hauba, farovi, hladnjak), kvar motora ili menjača, korozija koja je probila lim
-- "mala": ogrebotine, sitna ulegnuća, grad, farbanje, jedan panel, branik ili far, mali mehanički kvar
-  (kvačilo, turbina, DPF, dizne, kočnice, senzor, klima), potrošni delovi
+  ili zadnji kraj (branik, hauba, farovi, hladnjak), kvar motora ili menjača, korozija koja je probila lim,
+  i svaki znak problema sa motorom ili menjačem kome prodavac ne zna tačan uzrok: zvuk, lupanje, dim, troši
+  ulje ili vodu, lampica motora, "muss angeschaut werden", "Motorschaden", "Getriebeschaden" (uvoznik ne zna
+  koliko košta, pa računaj najgore)
+- "mala": ogrebotine, sitna ulegnuća, grad, farbanje, jedan panel, branik ili far, mali mehanički kvar kome
+  prodavac zna uzrok (kvačilo, turbina, DPF, dizne, kočnice, senzor, klima), potrošni delovi
 - "nema": nema šta da se popravlja
 Odredi i "airbag": true ako je bilo koji airbag aktiviran (volan, tabla, sedišta, zavese), inače false.
 Napomenu piši na srpskom, latinicom sa č, ć, š, ž i đ, bez nemačkih reči.

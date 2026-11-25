@@ -43,6 +43,11 @@ def test_prompt_asks_for_the_repair_size_and_says_what_is_small_and_big():
         assert word in small
     for word in ("udes", "motora", "menjača", "korozija"):
         assert word in big
+    # Novky 25.11.2026 on an ix35 whose seller wrote "Motor macht Geräusche, muss angeschaut werden" and that the
+    # tool showed as a small repair: an engine or gearbox symptom with no known cause is a big repair.
+    for word in ("ne zna tačan uzrok", "zvuk", "muss angeschaut werden", "Motorschaden", "Getriebeschaden"):
+        assert word in big
+    assert "zna uzrok" in small
     wreck = describe.PROMPT.split('- "les":')[1].split('- "kvar":')[0]
     for word in ("krov", "airbag", "šasija", "stubovi"):
         assert word in wreck
