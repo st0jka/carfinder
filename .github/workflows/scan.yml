@@ -1,0 +1,93 @@
+name: scan
+on:
+  schedule:
+    - cron: "17 */3 * * *"   # every 3 hours; the UTC hour picks the group of daily models (scan.models_of_run)
+  workflow_dispatch:
+
+concurrency:
+  group: scan
+  cancel-in-progress: false   # a long run finishes; the next one waits
+
+permissions:
+  contents: write    # the database lives, encrypted, as an asset of the "data" release
+  pages: write
+  id-token: write
+  actions: write     # keeps this schedule on: GitHub turns cron off after 60 days without a commit
+
+jobs:
+  scan:
+    runs-on: ubuntu-latest
+    timeout-minutes: 330
+    environment:
+      name: github-pages
+      url: ${{ steps.deploy.outputs.page_url }}
+    env:
+      GH_TOKEN: ${{ github.token }}
+      DB_KEY: ${{ secrets.DB_KEY }}
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-python@v5
+        with:
+          python-version: "3.13"
+          cache: pip
+      - run: pip install -r requirements.txt
+
+      - name: Keys from repository secrets
+        env:
+          ANTHROPIC_API_KEY: ${{ secrets.ANTHROPIC_API_KEY }}
+          APIFY_TOKEN: ${{ secrets.APIFY_TOKEN }}
+        run: printf 'ANTHROPIC_API_KEY=%s\nAPIFY_TOKEN=%s\n' "$ANTHROPIC_API_KEY" "$APIFY_TOKEN" > .env
+
+      - name: Database from the last run
+        id: download
+        run: |
+          gh release download data --pattern carfinder.db.gpg --dir data --clobber
+          gpg --batch --pinentry-mode loopback --passphrase "$DB_KEY" -o data/carfinder.db -d data/carfinder.db.gpg
+
+      - name: Scan
+        continue-on-error: true   # whatever it saved still goes back and onto the page
+        run: python -X utf8 -m carfinder.scan
+
+      - name: Check the database is whole
+        id: check
+        if: always() && steps.download.outcome == 'success'   # never replace the real database with an empty one
+        run: python -c "import sqlite3, sys; sys.exit(sqlite3.connect('data/carfinder.db').execute('pragma integrity_check').fetchone()[0] != 'ok')"
+
+      - name: Database back for the next run
+        if: always() && steps.check.outcome == 'success'
+        run: |
+          gpg --batch --yes --pinentry-mode loopback --symmetric --cipher-algo AES256 --passphrase "$DB_KEY" \
+            -o data/carfinder.db.gpg data/carfinder.db
+          gh release upload data data/carfinder.db.gpg --clobber
+
+      - name: Encrypted database kept for 3 days if the upload failed
+        if: failure() && steps.check.outcome == 'success'
+        uses: actions/upload-artifact@v4
+        with:
+          name: carfinder-db
+          path: data/carfinder.db.gpg
+          retention-days: 3
+
+      - name: Page
+        if: always() && steps.check.outcome == 'success'
+        env:
+          TZ: Europe/Belgrade   # the scan time on the page; the Scan step stays on UTC for the rotation
+        run: python -X utf8 -m tools.export_page site/index.html
+      - uses: actions/upload-pages-artifact@v3
+        if: always() && steps.check.outcome == 'success'
+        with:
+          path: site
+      - id: deploy
+        if: always() && steps.check.outcome == 'success'
+        uses: actions/deploy-pages@v4
+
+      - name: Keep the schedule on
+        if: always()
+        run: gh api -X PUT "repos/${{ github.repository }}/actions/workflows/scan.yml/enable"
+
+      - uses: actions/upload-artifact@v4
+        if: always()
+        with:
+          name: scan-log
+          path: data/scan.log
+          retention-days: 7

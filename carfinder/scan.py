@@ -7,7 +7,6 @@ through the one connection (mobile.de's weekly bookkeeping keeps its own connect
 import json
 import logging
 import re
-import msvcrt
 import sys
 import time
 from concurrent.futures import ThreadPoolExecutor
@@ -18,6 +17,12 @@ from pathlib import Path
 
 from carfinder import db, describe, market, models, net, polovni, transport, valuation
 from carfinder.sources import autoscout24, mobilede, willhaben
+
+try:
+    import msvcrt
+except ImportError:   # the cloud scan runs on Linux (GitHub Actions)
+    import fcntl
+    msvcrt = None
 
 SOURCES = {"autoscout24": autoscout24, "willhaben": willhaben, "mobilede": mobilede}
 
@@ -41,7 +46,7 @@ HAIKU_WORKERS = 4
 DETAIL_MARGIN_EUR = 1000   # fetch the detail page when the rough profit is within this of the target
 EMPTY_SITE_MODELS = 5      # a site with no car for this many models in one run has changed, not run dry
 LOCK = Path(db.DB_PATH).parent / "scan.lock"
-SCAN_EVERY_H = 3           # Task Scheduler "carFinder scan" starts a run every 3 hours
+SCAN_EVERY_H = 3           # .github/workflows/scan.yml starts a run every 3 hours (UTC hours)
 DAILY_GROUPS = 24 // SCAN_EVERY_H
 
 log = logging.getLogger("carfinder")
@@ -436,10 +441,13 @@ def run(conn, scan_models, overrides, errors, blocked_sites, all_models=True):
 
 
 def acquire_lock():
-    """Windows file lock held for the whole scan; the OS releases it when the process ends."""
+    """File lock held for the whole scan; the OS releases it when the process ends."""
     handle = open(LOCK, "a+")
     try:
-        msvcrt.locking(handle.fileno(), msvcrt.LK_NBLCK, 1)
+        if msvcrt:
+            msvcrt.locking(handle.fileno(), msvcrt.LK_NBLCK, 1)
+        else:
+            fcntl.flock(handle, fcntl.LOCK_EX | fcntl.LOCK_NB)
     except OSError:
         handle.close()
         return None
@@ -448,7 +456,7 @@ def acquire_lock():
 
 def models_of_run(hour):
     """The core models every run, plus the daily models' group of this hour, so each daily model is read once a day.
-    shortcut: a run that does not start (PC off, the last run still going) skips its group until the next day."""
+    shortcut: a run that does not start (GitHub late, the last run still going) skips its group until the next day."""
     group = hour // SCAN_EVERY_H
     return models.CORE_MODELS + models.DAILY_MODELS[group::DAILY_GROUPS]
 

@@ -795,3 +795,22 @@ def test_cleared_verdict_clears_its_time_and_record(client):
 def test_verdict_on_a_car_the_database_no_longer_prices_keeps_its_time_only(client):
     client.post("/override", data={"car_id": "as24:1", "verdict": "ne"})
     assert verdict_row()["verdict_at"] > 0 and verdict_row()["verdict_result"] is None
+
+
+def test_online_page_has_cards_but_no_forms_and_local_page_keeps_them(client, tmp_path):
+    from tools import export_page
+    save(foreign())
+    export_page.export(tmp_path / "site" / "index.html")
+    online = (tmp_path / "site" / "index.html").read_text(encoding="utf-8")
+    assert "VW Golf" in online and 'name="robots" content="noindex"' in online
+    assert 'class="filters"' not in online and 'action="/override"' not in online
+    local = client.get("/").text
+    assert 'class="filters"' in local and 'action="/override"' in local and "noindex" not in local
+
+
+def test_online_empty_page_has_no_command_or_dead_links(tmp_path, monkeypatch):
+    from tools import export_page
+    monkeypatch.setattr(db, "DB_PATH", tmp_path / "t.db")
+    export_page.export(tmp_path / "index.html")
+    online = (tmp_path / "index.html").read_text(encoding="utf-8")
+    assert "Skener još nije radio" in online and "python -m" not in online

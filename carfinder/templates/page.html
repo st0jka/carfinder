@@ -1,5 +1,5 @@
 <!doctype html>
-<html lang="sr"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1">
+<html lang="sr"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1">{% if static %}<meta name="robots" content="noindex">{% endif %}
 <title>carFinder</title>
 <link rel="preconnect" href="https://fonts.googleapis.com"><link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
 <link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Barlow:wght@400;500;600&family=Barlow+Semi+Condensed:wght@500;600;700&display=swap">
@@ -179,7 +179,7 @@ code{font-size:13.5px;background:var(--track);padding:2px 6px;border-radius:4px}
   <h1>carFinder</h1>
   <p class="run"><b>{{ cars|length }}</b> auta, skenirano {{ last_run }}</p>
  </div>
- <form class="filters" method="get" action="/">
+ {% if not static %}<form class="filters" method="get" action="/">
   <label>Zemlja<select name="country"><option value="">Sve zemlje</option>
    {% for k in ["DE","AT","CH"] %}<option {{ "selected" if k==country }}>{{ k }}</option>{% endfor %}</select></label>
   <label>Model<select name="model"><option value="">Svi modeli</option>
@@ -197,7 +197,7 @@ code{font-size:13.5px;background:var(--track);padding:2px 6px;border-radius:4px}
   {% for lim in ["5000","6000","8000"] %}<a class="chip" href="{{ qs('max_cash', '' if max_cash==lim else lim) }}" {{ 'aria-current=true' if max_cash==lim }}>Do {{ n(lim) }} e</a>{% endfor %}
   <a class="chip" href="{{ qs('all', '' if show_all else '1') }}" {{ 'aria-current=true' if show_all }}>I ispod cilja</a>
   {% if active %}<a class="chip clear" href="/{{ '?sort=' ~ sort if sort and sort != 'profit' }}">Poništi filtere ({{ active }})</a>{% endif %}
- </nav>
+ </nav>{% endif %}
 </div></header>
 
 <main id="list" aria-label="Auti">
@@ -303,7 +303,7 @@ code{font-size:13.5px;background:var(--track);padding:2px 6px;border-radius:4px}
 
  {% if r.equipment %}<ul class="eq" aria-label="Oprema">{% for e in r.equipment %}<li>{{ e }}</li>{% endfor %}</ul>{% endif %}
 
- <details class="more"><summary>Izmeni iznose i ocenu ili sakrij auto</summary>
+ {% if not static %}<details class="more"><summary>Izmeni iznose i ocenu ili sakrij auto</summary>
   <form class="edit" method="post" action="/override">
    <input type="hidden" name="car_id" value="{{ d.id }}">
    <input type="hidden" name="back" value="/{{ qs('sort', sort) }}#car-{{ d.id }}">
@@ -318,22 +318,21 @@ code{font-size:13.5px;background:var(--track);padding:2px 6px;border-radius:4px}
    </fieldset>
    <div class="act"><button class="btn primary">Sačuvaj i preračunaj</button><button class="btn ghost" name="hidden" value="1">Sakrij auto</button></div>
   </form>
- </details>
+ </details>{% endif %}
 </article>
 {% else %}
 <section class="empty">
  {% if last_run == "još nije" %}
   <h2>Skener još nije radio</h2>
-  <p>Pokreni skeniranje, pa osveži ovu stranu.</p>
-  <p><code>python -m carfinder.scan</code></p>
+  <p>Skeniranje radi samo, na svaka 3 sata. Proveri ponovo kasnije.</p>
  {% else %}
   <h2>Nema auta za ove filtere</h2>
   <p>Proširi izbor ili sačekaj novo skeniranje.</p>
-  <div class="acts">
+  {% if not static %}<div class="acts">
    {% if active %}<a class="btn ghost chip" href="/">Poništi filtere</a>{% endif %}
    {% if not show_all %}<a class="btn ghost chip" href="{{ qs('all', '1') }}">Prikaži i one ispod cilja</a>{% endif %}
-  </div>
-  <p class="run">Novo skeniranje: <code>python -m carfinder.scan</code></p>
+  </div>{% endif %}
+  <p class="run">Novo skeniranje stiže na svaka 3 sata.</p>
  {% endif %}
 </section>
 {% endfor %}
