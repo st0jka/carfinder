@@ -176,12 +176,22 @@ def test_only_the_models_of_this_run_are_fetched(conn, fetched):
     assert [snapshot[1] for snapshot in fetched] == ["Passat B6", "Passat B7", "Passat B8"]
 
 
-@pytest.mark.parametrize("hours,fetches", [(0, 6), (22, 6), (24, 12)])
-def test_snapshot_is_fetched_again_only_after_23_hours(conn, fetched, hours, fetches):
+@pytest.mark.parametrize("hours,fetches", [(0, 6), (19, 6), (21, 12), (24, 12)])
+def test_snapshot_is_fetched_again_only_after_20_hours(conn, fetched, hours, fetches):
     run(conn)
     age_cache(conn, hours)
     run(conn)
     assert len(fetched) == fetches
+
+
+@pytest.mark.parametrize("phase_a_hours", [0.5, 1.5, 3])
+def test_daily_model_gets_fresh_pa_prices_at_its_run_the_next_day(conn, fetched, phase_a_hours):
+    """The snapshot is stored when phase a ends; with a 23 h cache, one stored 1.5 h into the run was still
+    "fresh" at the same hour next day and the model was priced from two-day-old ads."""
+    run(conn)
+    age_cache(conn, 24 - phase_a_hours)
+    run(conn)
+    assert len(fetched) == 2 * len(GOLF_UPFRONT)
 
 
 def test_other_fuel_is_fetched_only_when_a_car_needs_it(conn, fetched, monkeypatch):

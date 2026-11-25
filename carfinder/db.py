@@ -61,6 +61,12 @@ def cached_pa(conn, key, max_age_s):
     return None
 
 
+def recent_pa(conn, max_age_s):
+    """Every cached snapshot younger than max_age_s, by its cache key."""
+    rows = conn.execute("SELECT key, data FROM pa_cache WHERE fetched_at > ?", (time.time() - max_age_s,))
+    return {row["key"]: json.loads(row["data"]) for row in rows}
+
+
 def drop_old_pa_cache(conn, version):
     """Every cache key starts with the version that wrote it; rows of other versions are never read again."""
     conn.execute("DELETE FROM pa_cache WHERE key NOT LIKE ?", (f"[{version},%",))

@@ -3,7 +3,7 @@ from datetime import datetime, timedelta
 
 import pytest
 
-from carfinder import market, models, scan, valuation
+from carfinder import db, market, models, scan, valuation
 from tests.test_scan_db import foreign, pa_car
 from tests.test_scan_phases import GOLF, GOLF7_DIESEL, conn, fetched   # noqa: F401 (fixtures)
 
@@ -294,6 +294,42 @@ def test_scan_of_some_models_dates_the_ads_but_gives_no_speed(conn, fetched):   
                                       all_models=False)
     assert results["as24:1"]["serbia"]["speed"] is None
     assert results["as24:1"]["serbia"]["first"]["age_days"] > 40
+
+
+def other_model_ads(days_listed):
+    """20 ads of another model in the Golf's price band, as a cached snapshot from an earlier run."""
+    return [pa_car(str(32000000 + i), 9000 + i * 10, model="Octavia", updated=day(days_listed)) for i in range(20)]
+
+
+def manual_golfs():
+    """Only the 20 manual Golfs of slow_and_fast_golfs: without other ads their price band is empty."""
+    return {GOLF7_DIESEL: [ad for ad in slow_and_fast_golfs()[GOLF7_DIESEL] if ad["gearbox"] == "manual"]}
+
+
+def scan_speed(conn, snapshots, all_models=True):
+    with scan.site_threads() as threads:
+        results = scan.value_and_save(conn, threads, [(foreign(), GOLF)], snapshots, {}, set(), [],
+                                      all_models=all_models)
+    return results["as24:1"]["serbia"]["speed"]
+
+
+def test_price_band_holds_the_cached_snapshots_of_the_models_outside_this_run(conn, fetched):   # noqa: F811
+    """A run reads the core models and one eighth of the daily ones; the band must not change with that eighth."""
+    assert scan_speed(conn, manual_golfs()) is None   # the Golf's own ads are left out of its band
+    db.store_pa(conn, "octavia", other_model_ads(10), "Octavia")
+    speed = scan_speed(conn, manual_golfs())
+    assert speed["label"] == "sporo" and speed["usual_days"] >= 10
+
+
+def test_price_band_leaves_out_a_snapshot_over_72_hours_old(conn, fetched):   # noqa: F811
+    db.store_pa(conn, "octavia", other_model_ads(10), "Octavia")
+    conn.execute("UPDATE pa_cache SET fetched_at = fetched_at - ?", (scan.PA_STALE_S + 60,))
+    assert scan_speed(conn, manual_golfs()) is None
+
+
+def test_scan_of_some_models_takes_no_band_from_the_cache(conn, fetched):   # noqa: F811
+    db.store_pa(conn, "octavia", other_model_ads(10), "Octavia")
+    assert scan_speed(conn, manual_golfs(), all_models=False) is None
 
 
 @pytest.mark.parametrize("only,all_models", [(None, True), ("golf", False)])

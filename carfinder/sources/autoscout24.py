@@ -20,11 +20,11 @@ log = logging.getLogger("carfinder")
 
 FUEL = {"D": "diesel", "B": "petrol", "E": "electric", "L": "petrol_lpg", "C": "petrol_cng",
         "2": "hybrid", "3": "hybrid", "O": "other"}
-# "touring sports" and "sports wagon" are Toyota and Kia, "cw" Hyundai; Seat's "ST" counts only after "Leon", so
-# Ford's "ST-Line" stays a trim. A V60 needs no word: its model's body is estate.
+# "touring sports" and "sports wagon" are Toyota and Kia, "cw" Hyundai; Seat's "ST" counts only after "Leon" or
+# "Ibiza", so Ford's "ST-Line" stays a trim. A V60 needs no word: its model's body is estate.
 ESTATE_WORDS = re.compile(r"\b(?:variant|avant|combi|kombi|touring|sports[ -]?tourer|country[ -]tourer|sw|break"
-                          r"|grand ?tour|turnier|t-modell|estate|sports ?wagon|cw|c5 tourer|civic tourer)\b"
-                          r"|\bleon st\b(?!-)", re.I)
+                          r"|grand ?tour|turnier|t-modell|estate|sports ?wagon|cw|c5 tourer|civic tourer"
+                          r"|shooting ?brake)\b|\b(?:leon|ibiza) st\b(?!-)", re.I)
 GEARBOX = {"Schaltgetriebe": "manual", "Automatik": "automatic", "Halbautomatik": "automatic"}
 BODY = {"Kombi": "estate", "Limousine": "sedan", "Kleinwagen": "hatchback", "SUV/Geländewagen/Pickup": "suv",
         "Van/Kleinbus": "van", "Coupé": "coupe", "Cabrio": "cabrio"}

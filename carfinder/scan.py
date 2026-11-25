@@ -30,7 +30,9 @@ MAX_KM = 325_000   # Bane 24.11.2026: "trazimo kola do 325.000"
 COUNTRIES = {"DE", "AT", "CH"}
 # Bane 24.11.2026: an ex-taxi B-Klasse was on top; worn taxis are not what he buys.
 TAXI = re.compile(r"taxi", re.I)
-PA_CACHE_S = 23 * 3600     # under a day: a daily model's snapshot is about 24 h old at its next run
+# A snapshot is stored when phase a ends, up to about 3 h into its run, so at the same hour next day it can be
+# only 21 h old; a daily model still gets fresh PA prices at each of its runs.
+PA_CACHE_S = 20 * 3600
 PA_STALE_S = 72 * 3600     # when a refresh fails, the previous snapshot still prices cars up to this age
 PA_CACHE_VERSION = 7       # bump when the PA query or parsing changes, so old cache rows are not reused
 UPFRONT_FUEL = "diesel"    # nearly every car we scan, plus petrol for "petrol" generations; other fuels are fetched
@@ -112,7 +114,7 @@ def cache_key(snapshot):
 
 
 def request_snapshots(conn, threads, wanted, snapshots, blocked_sites):
-    """Snapshots under 24 h old come from the cache; the others are queued on the PA thread."""
+    """Snapshots younger than PA_CACHE_S come from the cache; the others are queued on the PA thread."""
     jobs = []
     for snapshot in wanted:
         cars = db.cached_pa(conn, cache_key(snapshot), PA_CACHE_S)
@@ -345,8 +347,13 @@ def value_and_save(conn, threads, found, snapshots, overrides, blocked_sites, er
     A car whose PA snapshot is missing is left out and not saved, so the result of its last priced scan stays.
     A scan of some models only gives no sell speed: their price bands would hold no other model's ads."""
     started = time.time()
-    market.add_ages(snapshots)
-    reference = market.band_reference(snapshots) if all_models else ()
+    market_ads = snapshots
+    if all_models:
+        # a run reads the core models and one eighth of the daily ones: the price bands hold every model's latest
+        # snapshot, so a car's speed does not change with the daily group that shares its run
+        market_ads = {**db.recent_pa(conn, PA_STALE_S), **snapshots}
+    market.add_ages(market_ads)
+    reference = market.band_reference(market_ads) if all_models else ()
     results = {}       # list-stage result first, replaced by the final one for cars near the target
     near_target = []
     for car, model in found:

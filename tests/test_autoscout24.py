@@ -205,6 +205,9 @@ def test_drive_is_read_from_the_title_on_the_list_page(version, subtitle, drive)
     ("Leon ST 1.6 TDI", "estate"), ("Mazda6 Sport Kombi 2.2", "estate"),
     ("Focus 1.5 EcoBlue ST-Line", None), ("Leon 1.5 TSI FR", None), ("Swift 1.2 Dualjet", None),
     ("Leon ST-Line 1.6", None), ("Corolla 1.8 Hybrid", None),
+    # Ibiza IV ST and the CLA Shooting Brake have estate prices in models.py
+    ("Ibiza ST 1.2 TDI", "estate"), ("CLA 200 d Shooting Brake", "estate"), ("CLA 180 ShootingBrake", "estate"),
+    ("Ibiza 1.0 TSI FR", None), ("Ibiza ST-Line", None), ("CLA 200 d Brake Assist", None),
 ])
 def test_list_body_uses_estate_badges_in_the_sellers_version(version, body):
     listing = item("a", version)
