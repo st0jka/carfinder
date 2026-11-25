@@ -1,0 +1,354 @@
+<!doctype html>
+<html lang="sr"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1">
+<title>carFinder</title>
+<link rel="preconnect" href="https://fonts.googleapis.com"><link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Barlow:wght@400;500;600&family=Barlow+Semi+Condensed:wght@500;600;700&display=swap">
+<style>
+:root{
+ --bg:#EDF0F3;--surface:#FFFFFF;--ink:#17202A;--mute:#5B6672;--line:#D5DBE1;--line-strong:#8A95A1;--track:#E4E8EC;
+ --blue:#1F4E9E;--on-blue:#FFFFFF;
+ --good:#0B7A43;--good-bg:#E2F3E9;--on-good:#FFFFFF;
+ --edge:#8A5A00;--edge-bg:#FFF1D2;--bad:#B3261E;--bad-bg:#FCE8E6;
+ --text:'Barlow',system-ui,'Segoe UI',sans-serif;--num:'Barlow Semi Condensed','Arial Narrow',system-ui,sans-serif;
+ color-scheme:light;
+}
+@media (prefers-color-scheme:dark){:root{
+ --bg:#14181D;--surface:#1C2229;--ink:#E7EBEF;--mute:#9DA7B2;--line:#2E3740;--line-strong:#6B7682;--track:#28303A;
+ --blue:#8DB4FF;--on-blue:#0D1B33;
+ --good:#5BD08F;--good-bg:#173323;--on-good:#0B2416;
+ --edge:#F2B54A;--edge-bg:#3A2D10;--bad:#FF8A7E;--bad-bg:#3D1C19;
+ color-scheme:dark;
+}}
+*{box-sizing:border-box}
+body{margin:0;background:var(--bg);color:var(--ink);font:15px/1.45 var(--text);-webkit-text-size-adjust:100%}
+a{color:var(--blue)}
+:focus-visible{outline:3px solid var(--blue);outline-offset:2px;border-radius:4px}
+.sr-only{position:absolute;width:1px;height:1px;overflow:hidden;clip:rect(0 0 0 0);white-space:nowrap}
+.num{font-family:var(--num);font-variant-numeric:tabular-nums}
+
+/* Header and filters */
+.top{background:var(--surface);border-bottom:1px solid var(--line)}
+.top-in{max-width:1180px;margin:0 auto;padding:12px 16px;display:grid;gap:12px}
+.brand{display:flex;align-items:baseline;justify-content:space-between;gap:4px 16px;flex-wrap:wrap}
+h1{font:700 24px/1 var(--num);margin:0;letter-spacing:-.01em}
+.run{margin:0;font-size:13px;color:var(--mute)}
+.run b{color:var(--ink);font:600 17px var(--num)}
+.filters{display:grid;grid-template-columns:1fr 1fr;gap:10px 12px;align-items:end;margin:0}
+.filters label{display:flex;flex-direction:column;gap:4px;font-size:13px;color:var(--mute);min-width:0}
+.filters .chk{flex-direction:row;align-items:center;gap:8px;font-size:15px;color:var(--ink);min-height:44px}
+select,input[type=text],input:not([type]){font:inherit;font-size:16px;min-height:44px;width:100%;padding:6px 10px;border:1px solid var(--line-strong);border-radius:8px;background:var(--surface);color:var(--ink)}
+input[type=checkbox]{width:20px;height:20px;margin:0;accent-color:var(--blue)}
+.btn{font:600 15px var(--text);min-height:44px;padding:0 18px;border-radius:8px;cursor:pointer;border:1px solid var(--blue)}
+.btn.primary{background:var(--blue);color:var(--on-blue)}
+.btn.ghost{background:transparent;color:var(--ink);border-color:var(--line-strong)}
+.quick{display:flex;gap:8px;overflow-x:auto;margin:0 -16px;padding:0 16px 2px;scrollbar-width:none}
+.quick::-webkit-scrollbar{display:none}
+.chip{flex:none;display:inline-flex;align-items:center;min-height:36px;padding:0 14px;border-radius:999px;border:1px solid var(--line-strong);color:var(--ink);text-decoration:none;font-size:14px;white-space:nowrap}
+.chip[aria-current]{background:var(--ink);color:var(--surface);border-color:var(--ink)}
+.chip.clear{color:var(--blue);border-style:dashed}
+@media (min-width:880px){
+ .filters{grid-template-columns:repeat(4,minmax(0,180px)) auto auto;justify-content:start}
+ .quick{margin:0;padding:0}
+}
+
+/* List: one column on a phone, two cards side by side on a wide screen */
+main{max-width:1180px;margin:0 auto;padding:12px 16px 56px;display:grid;grid-template-columns:minmax(0,1fr);gap:12px;align-items:start}
+body.busy main{opacity:.5;pointer-events:none}
+.car{background:var(--surface);border:1px solid var(--line);border-radius:12px;padding:12px;display:grid;column-gap:12px;
+ grid-template-columns:112px minmax(0,1fr);scroll-margin-top:12px}
+.car>*:not(.thumb):not(.id){grid-column:1/-1}
+.car.is-stop{border-color:var(--bad);box-shadow:inset 4px 0 0 var(--bad)}
+.thumb{align-self:start;display:block;aspect-ratio:4/3;border-radius:8px;overflow:hidden;background:var(--track);color:var(--mute);font-size:12px;text-decoration:none}
+.thumb img{width:100%;height:100%;object-fit:cover;display:block}
+.thumb span{display:grid;place-items:center;height:100%}
+.id{min-width:0}
+.mk{margin:0;font:700 13px/1.3 var(--num);letter-spacing:.02em;text-transform:uppercase;color:var(--mute)}
+.t{margin:0;font:600 16px/1.3 var(--text)}
+.t a{color:var(--ink);text-decoration:none;display:-webkit-box;-webkit-line-clamp:2;-webkit-box-orient:vertical;overflow:hidden}
+.t a:hover{text-decoration:underline}
+.specs{margin:4px 0 0;font-size:13.5px;color:var(--mute)}
+.specs span{white-space:nowrap}
+.eq{list-style:none;margin:8px 0 0;padding:0;display:flex;flex-wrap:wrap;gap:4px}
+.eq li{border:1px solid var(--line);border-radius:6px;padding:0 6px;font-size:12.5px;color:var(--mute)}
+.tag{display:inline-block;font-size:12.5px;font-weight:600;padding:0 6px;border-radius:6px;background:var(--good-bg);color:var(--good)}
+.tag.slow{background:var(--edge-bg);color:var(--edge)}
+.tag.novky{background:var(--track);color:var(--ink)}
+
+/* Verdict and profit */
+.head{display:flex;align-items:center;gap:8px;flex-wrap:wrap;margin-top:12px}
+.badge,.pill{font:600 14px/1 var(--num);padding:6px 10px;border-radius:999px;white-space:nowrap}
+.badge.top{background:var(--good);color:var(--on-good)}
+.badge.ok{background:var(--good-bg);color:var(--good)}
+.badge.edge{background:var(--edge-bg);color:var(--edge)}
+.badge.low{background:var(--bad-bg);color:var(--bad)}
+.pill{margin-left:auto;border:1px solid currentColor}
+.pill.stop{color:var(--bad);background:var(--bad-bg)}
+.pill.chk{color:var(--edge)}
+.pill.clean{color:var(--good)}
+.profit{margin:10px 0 0;font:700 34px/1 var(--num);letter-spacing:-.01em}
+.profit small{font:500 15px var(--text);color:var(--mute);letter-spacing:0;margin-right:6px}
+[data-v=top],[data-v=ok]{--tone:var(--good)}[data-v=edge]{--tone:var(--edge)}[data-v=low]{--tone:var(--mute)}
+[data-loss]{--tone:var(--bad)}   /* red only for a real loss, a small profit is not one */
+.profit span{color:var(--tone)}
+.goal{margin:4px 0 0;font-size:13.5px;color:var(--mute)}
+
+/* Receipt: price abroad + costs = total, then the Serbian sale and the profit */
+.bill{width:100%;border-collapse:collapse;margin-top:12px;font-size:15px}
+.bill th{text-align:left;font-weight:400;padding:5px 0}
+.bill td{text-align:right;padding:5px 0 5px 12px;font:500 18px/1.2 var(--num);font-variant-numeric:tabular-nums;white-space:nowrap;vertical-align:top}
+.bill .op{display:inline-block;width:1.1em;color:var(--mute);font-family:var(--num)}
+.bill .sub{display:block;padding-left:1.1em;font-size:12.5px;color:var(--mute)}
+.bill td small{font:400 13px var(--text);color:var(--mute)}
+.bill .sum th,.bill .sum td{font-weight:700;border-top:1px solid var(--line-strong)}
+.bill .sale th,.bill .sale td{padding-top:12px}
+.bill .res th,.bill .res td{font-weight:700;border-top:1px solid var(--line-strong)}
+.bill .res td{color:var(--tone)}
+.bill .alt th,.bill .alt td{font-size:13.5px;color:var(--mute);padding-top:2px}
+
+/* Most to pay the seller */
+.max{margin:12px 0 0;padding:10px 12px;border:1px solid var(--line-strong);border-radius:8px;font-size:14px}
+.max p{margin:0}
+.max .big{font-size:15px}
+.max .big b{font:700 19px var(--num);white-space:nowrap}
+.max .why{color:var(--mute);font-size:13px}
+.max .room{margin-top:4px}
+.max .room b{font-family:var(--num);font-size:16px}
+.max .neg,.max .neg b{color:var(--bad)}
+
+/* Serbian ads, warnings, ad facts */
+.sr{margin:12px 0 0;font-size:14px}
+.sr p{margin:0}
+.sr b{font-family:var(--num);font-size:15px}
+.sr .thin{color:var(--edge);font-weight:600}
+.sr .others{margin-top:4px}
+.comps{display:inline;margin:0;padding:0;list-style:none;font-size:13px;color:var(--mute)}
+.comps li{display:inline;white-space:nowrap}
+.comps li+li::before{content:"· "}
+.comps a{font:600 15px var(--num);margin:0 1px}
+.sr a{padding:4px 2px}   /* the Serbian ad prices are tap targets on a phone */
+.warn{list-style:none;margin:12px 0 0;padding:0;display:grid;gap:4px}
+.warn li{font-size:14px;padding:4px 8px;border-radius:4px;border-left:4px solid}
+.warn .stop{background:var(--bad-bg);color:var(--bad)}
+.warn .chk{background:var(--edge-bg);color:var(--edge)}
+.facts{margin:12px 0 0;font-size:13.5px;color:var(--mute)}
+.facts a{font-weight:600;white-space:nowrap;padding:4px 2px}
+.head+.warn{margin-top:10px}
+
+/* Bane's own numbers: the only part behind a click */
+.more{margin-top:10px;border-top:1px solid var(--line)}
+summary{min-height:44px;display:flex;align-items:center;gap:6px;cursor:pointer;color:var(--blue);font-weight:500;list-style:none}
+summary::-webkit-details-marker{display:none}
+summary::before{content:"";width:7px;height:7px;border-right:2px solid currentColor;border-bottom:2px solid currentColor;transform:rotate(-45deg);margin-right:4px}
+details[open]>summary::before{transform:rotate(45deg)}
+.edit{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:10px 12px;margin-bottom:12px;max-width:460px}
+.edit label{display:flex;flex-direction:column;gap:4px;font-size:13px;color:var(--mute);min-width:0}
+.edit .act{grid-column:1/-1;display:flex;gap:8px;flex-wrap:wrap}
+.edit fieldset{grid-column:1/-1;border:0;margin:0;padding:0;display:flex;flex-wrap:wrap;align-items:center;gap:0 16px}
+.edit legend{padding:0;font-size:13px;color:var(--mute)}
+.edit .pick{flex-direction:row;align-items:center;gap:8px;font-size:15px;color:var(--ink);min-height:44px}
+.edit .pick input{width:20px;height:20px;margin:0;accent-color:var(--blue)}
+.edit .note{flex:1 1 100%}
+
+@media (min-width:880px){
+ main{grid-template-columns:repeat(2,minmax(0,1fr));gap:16px}
+ .car{grid-template-columns:150px minmax(0,1fr);column-gap:14px;padding:14px 16px}
+}
+
+.empty{background:var(--surface);border:1px dashed var(--line-strong);border-radius:12px;padding:24px 20px;max-width:560px}
+.empty h2{margin:0 0 8px;font:700 22px var(--num)}
+.empty p{margin:0 0 12px}
+.empty .acts{display:flex;gap:8px;flex-wrap:wrap;margin-bottom:12px}
+code{font-size:13.5px;background:var(--track);padding:2px 6px;border-radius:4px}
+@media (prefers-reduced-motion:reduce){*{transition:none!important;scroll-behavior:auto!important}}
+</style></head><body>
+{%- macro n(x) %}{{ "{:,}".format((x or 0)|int)|replace(",", ".") }}{% endmacro %}
+{%- macro s(x) %}{{ "{:+,}".format((x or 0)|int)|replace(",", ".") }}{% endmacro %}
+{%- macro ad(x, year) %}{% if x.url %}<a href="{{ x.url }}" target="_blank" rel="noopener"><b>{{ n(x.price) }} e</b></a>{% else %}<b>{{ n(x.price) }} e</b>{% endif %}{% if x.adjusted != x.price %} (godinu {{ "stariji" if x.year < year else "noviji" }}, računa se kao {{ n(x.adjusted) }} e){% endif %}{% endmacro %}
+{%- macro qs(key, val) -%}
+{%- set p = {"country": country, "model": model, "max_cash": max_cash, "all": "1" if show_all else "", "sort": sort} -%}
+{%- set _ = p.update({key: val}) -%}
+?{{ p|dictsort|selectattr("1")|list|urlencode }}
+{%- endmacro %}
+{%- set active = [country, model, max_cash, show_all]|select|list|length %}
+{%- set in_country = {"DE": "Nemačkoj", "AT": "Austriji", "CH": "Švajcarskoj"} %}
+{%- set body_names = {"estate": "karavan", "sedan": "limuzina", "hatchback": "hečbek", "suv": "SUV", "van": "kombi", "coupe": "kupe", "cabrio": "kabriolet"} %}
+{%- set model_names = dict(model_keys) %}
+
+<header class="top"><div class="top-in">
+ <div class="brand">
+  <h1>carFinder</h1>
+  <p class="run"><b>{{ cars|length }}</b> auta, skenirano {{ last_run }}</p>
+ </div>
+ <form class="filters" method="get" action="/">
+  <label>Zemlja<select name="country"><option value="">Sve zemlje</option>
+   {% for k in ["DE","AT","CH"] %}<option {{ "selected" if k==country }}>{{ k }}</option>{% endfor %}</select></label>
+  <label>Model<select name="model"><option value="">Svi modeli</option>
+   {% for m, label in model_keys %}<option value="{{ m }}" {{ "selected" if m==model }}>{{ label }}</option>{% endfor %}</select></label>
+  <label>Ukupno uloženo do (e)<input name="max_cash" inputmode="numeric" pattern="[0-9. ]*" placeholder="bez granice" value="{{ max_cash or '' }}"></label>
+  <label>Redosled<select name="sort" data-autosubmit>
+   <option value="profit" {{ "selected" if sort in ("profit", "", none) or sort is undefined }}>Najveća zarada</option>
+   <option value="cash" {{ "selected" if sort=="cash" }}>Najmanje uloženo</option>
+   <option value="newest" {{ "selected" if sort=="newest" }}>Najnovije</option></select></label>
+  <label class="chk"><input type="checkbox" name="all" value="1" {{ "checked" if show_all }}>I ispod cilja</label>
+  <button class="btn primary">Prikaži</button>
+ </form>
+ <nav class="quick" aria-label="Brzi filteri">
+  {% for k in ["DE","AT","CH"] %}<a class="chip" href="{{ qs('country', '' if country==k else k) }}" {{ 'aria-current=true' if country==k }}>{{ k }}</a>{% endfor %}
+  {% for lim in ["5000","6000","8000"] %}<a class="chip" href="{{ qs('max_cash', '' if max_cash==lim else lim) }}" {{ 'aria-current=true' if max_cash==lim }}>Do {{ n(lim) }} e</a>{% endfor %}
+  <a class="chip" href="{{ qs('all', '' if show_all else '1') }}" {{ 'aria-current=true' if show_all }}>I ispod cilja</a>
+  {% if active %}<a class="chip clear" href="/{{ '?sort=' ~ sort if sort and sort != 'profit' }}">Poništi filtere ({{ active }})</a>{% endif %}
+ </nav>
+</div></header>
+
+<main id="list" aria-label="Auti">
+{% for c in cars %}{% set d=c.data %}{% set r=c.result %}{% set cost=r.cost %}
+{%- if r.passes and r.profit >= 1.5 * r.target %}{% set v, vl = "top", "Odlično" %}
+{%- elif r.passes %}{% set v, vl = "ok", "Dobro" %}
+{#- the profit reaches the target, but a warning holds the car back: details unread or repair cost unknown #}
+{%- elif r.profit >= r.target %}{% set v, vl = "edge", "Čeka proveru" %}
+{%- elif r.profit >= 0.9 * r.target %}{% set v, vl = "edge", "Na granici" %}
+{%- else %}{% set v, vl = "low", "Ispod cilja" %}{% endif %}
+{%- set big = big_flag in r.flags %}
+{%- set ns = namespace(stop=[], chk=[], big_note="") %}
+{%- for f in r.flags %}
+ {%- if f.startswith("sumnjivo") or f.startswith("WhatsApp") %}{% set ns.stop = ns.stop + [f] %}
+ {%- elif f == big_flag %}{# shown as the "Velika šteta" row under the verdict #}
+ {%- elif f.startswith("iz opisa: ") and big %}{% set ns.big_note = f[10:].rstrip(".") %}
+ {#- the site's damage mark and what the description says about it are one fact #}
+ {%- elif f.startswith("iz opisa: ") and ns.chk and ns.chk[-1] == "oštećen" %}{% set ns.chk = ns.chk[:-1] + ["oštećen, " ~ f] %}
+ {%- else %}{% set ns.chk = ns.chk + [f] %}{% endif %}
+{%- endfor %}
+{#- a fraud sign or an unpriced big repair outweighs the profit, so the verdict says that instead #}
+{%- if ns.stop %}{% set v, vl = "low", "Rizik" %}
+{%- elif big %}{% set v, vl = "low", "Velika šteta" %}{% endif %}
+{%- set room = none if r.max_buy is none else r.max_buy - cost.buy %}
+{%- set net = d.net_price and d.vat_deductible %}
+{%- set sp = r.serbia.speed %}
+{%- set first = r.serbia.first %}
+{%- set edited = c.override and (c.override.transport is number or c.override.repair is number or c.override.origin_proof == 0 or c.override.carina is number or c.override.buy_discount is number) %}
+<article class="car{{ ' is-stop' if ns.stop or big }}" data-v="{{ v }}"{{ ' data-loss' if r.profit < 0 }} id="car-{{ d.id }}" aria-labelledby="t-{{ loop.index }}">
+ <a class="thumb" href="{{ d.url }}" target="_blank" rel="noopener" tabindex="-1" aria-hidden="true">
+  {% if d.image %}<img src="{{ d.image }}" alt="" loading="lazy" onerror="this.outerHTML='<span>bez slike</span>'">{% else %}<span>bez slike</span>{% endif %}</a>
+ <div class="id">
+  {% if model_names.get(c.model_key) %}<p class="mk">{{ model_names[c.model_key] }}</p>{% endif %}
+  <h2 class="t" id="t-{{ loop.index }}"><a href="{{ d.url }}" target="_blank" rel="noopener">{{ d.title }}</a></h2>
+  <p class="specs"><span>{{ d.year }}</span> · <span>{% if d.km %}{{ n(d.km) }} km{% else %}km nepoznato{% endif %}</span>
+   {%- if d.kw %} · <span>{{ d.kw }} kW ({{ (d.kw * 1.36)|round|int }} KS)</span>{% endif %}{% if d.cc %} · <span>{{ n(d.cc) }} ccm</span>{% endif %}
+   · <span>{{ fuel_names.get(d.fuel, d.fuel) }}</span> · <span>{{ {"automatic": "automatik", "manual": "manuelni"}.get(d.gearbox, "menjač ?") }}</span>
+   {%- if d.body %} · <span>{{ body_names.get(d.body, d.body) }}</span>{% endif %}{% if d.doors %} · <span>{{ d.doors }} vrata</span>{% endif %}{% if d.drive == "4x4" %} · <span>4x4</span>{% endif %}</p>
+ </div>
+
+ <div class="head">
+  <span class="badge {{ v }}">{{ vl }}</span>
+  {% if sp and sp.label == "brzo" %}<span class="tag">Brzo se prodaje</span>{% elif sp and sp.label == "sporo" %}<span class="tag slow">Sporo se prodaje</span>{% endif %}
+  {% if c.override.verdict %}<span class="tag novky">Novky: {{ c.override.verdict }}{% if c.override.verdict_note %}, {{ c.override.verdict_note }}{% endif %}</span>{% endif %}
+  {% if edited %}<span class="tag">ručno izmenjeno</span>{% endif %}
+  {% if ns.chk %}<span class="pill chk">{{ warnings_label(ns.chk|length) }}</span>
+  {% elif not (ns.stop or big) %}<span class="pill clean">Bez upozorenja</span>{% endif %}
+ </div>
+ {% if ns.stop or big %}<ul class="warn" aria-label="Najvažnija upozorenja">
+  {% for f in ns.stop %}<li class="stop"><b>Stop:</b> {{ f }}</li>{% endfor %}
+  {% if big %}<li class="stop"><b>Velika šteta:</b> {{ ns.big_note or "prodavac opisuje veći kvar" }}</li>{% endif %}
+ </ul>{% endif %}
+ <p class="profit num"><small>Zarada</small><span>{{ s(r.profit) }} e</span></p>
+ <p class="goal">Cilj za ovaj ulog: {{ n(r.target) }} e{% if big %}. Zarada još ne računa veliku popravku.{% endif %}</p>
+
+ <table class="bill">
+  <tr><th scope="row">Cena u {{ in_country.get(d.country, d.country) }}
+   {%- if net %}<span class="sub">neto, bez PDV-a; u oglasu {{ n(d.price) }} e</span>{% endif %}
+   {%- if cost.buy_discount %}<span class="sub">Traži {{ n(cost.asking) }} e{{ " neto" if net }}. Računamo {{ n(cost.buy_discount) }} e popusta.</span>{% endif %}</th><td>{{ n(cost.buy) }} e</td></tr>
+  <tr><th scope="row"><span class="op">+</span>Dovoz do Pančeva</th><td>{{ n(cost.transport) }} e</td></tr>
+  {#- one rough figure for everything the customs firm asks; the real bill is known only from the car's papers #}
+  <tr><th scope="row"><span class="op">+</span>Carina</th><td>{% if c.override.carina is number %}{{ n(cost.import.total) }} e <small>(tvoj iznos)</small>{% else %}<small>oko</small> {{ n(cost.import.total|round|int) }} e{% endif %}</td></tr>
+  {% if cost.repair or big %}<tr><th scope="row"><span class="op">+</span>Popravka {{ "(tvoj iznos)" if c.override.repair is number else "(procena)" }}
+   {%- if big %}<span class="sub">{% if cost.repair %}{{ n(cost.repair) }} e je za sitnu štetu{% else %}nije uračunata{% endif %}, upiši pravu cenu</span>{% endif %}</th><td>{{ n(cost.repair) }} e</td></tr>{% endif %}
+  <tr class="sum"><th scope="row"><span class="op">=</span>Ukupno uloženo</th><td>{{ n(cost.cash) }} e</td></tr>
+  <tr class="sale"><th scope="row">Prodaja u Srbiji
+   <span class="sub">najjeftiniji oglas {{ n(r.serbia.anchor) }} e{% if r.serbia.km_factor < 1 %}, manje {{ "%.1f"|format((1 - r.serbia.km_factor) * 100)|replace(".", ",") }}% za razliku u kilometraži{% endif %}{% if r.serbia.sale_cut %}, minus {{ n(r.serbia.sale_cut) }} e za cenkanje u Srbiji{% endif %}</span></th><td>{{ n(r.sale) }} e</td></tr>
+  <tr class="res"><th scope="row">Zarada</th><td>{{ s(r.profit) }} e</td></tr>
+  {#- the invoice case only matters when it turns a deal into one under the target #}
+  {% if r.profit_worst is number and r.profit >= r.target > r.profit_worst %}<tr class="alt"><th scope="row">Ako carina računa po fakturi</th><td>zarada {{ s(r.profit_worst) }} e, ispod cilja</td></tr>{% endif %}
+ </table>
+
+ <div class="sr">
+  <p>Na polovniautomobili.com najjeftiniji oglas: {{ ad(r.serbia.first, d.year) }}{% if r.serbia.next %}, sledeći {{ ad(r.serbia.next[0], d.year) }}{% endif %}.
+   Oglasa ukupno {{ r.serbia.n }}, od toga {{ r.serbia.within_500 }} najviše 500 e iznad najjeftinijeg{% if r.serbia.skipped_bait %}, preskočen mamac ispod njih: {{ r.serbia.skipped_bait }}{% endif %}.
+   {% if r.serbia.n < min_ads %}<span class="thin">Malo ovakvih oglasa (manje od {{ min_ads }}), prodajna cena je nesigurna.</span>{% endif %}</p>
+  {#- an ad that sat long or was cut is a price nobody paid yet #}
+  {#- an ad's age is only known as a lower bound (from PA ad ids), so "najmanje" #}
+  {% if first.age_days is number %}<p class="anchor">Najjeftiniji oglas {% if first.age_days == 0 %}je postavljen ovih dana{% else %}stoji najmanje {{ days_label(first.age_days) }}{% endif %}{% if first.cut %}, cena mu je spuštena{% if first.base_price %} sa {{ n(first.base_price) }} e{% endif %}{% endif %}.</p>{% endif %}
+  {% if sp %}<p class="speed">Ovakvi auti stoje u oglasu oko {{ days_label(sp.age_days) }}, a drugi auti iste cene oko {{ days_label(sp.usual_days) }}.{% if sp.cut_share %} Cenu je spustilo {{ (sp.cut_share * 100)|round|int }}% prodavaca.{% endif %}</p>{% endif %}
+  {#- the two cheapest ads are in the line above; the list goes on from the third #}
+  {% if r.serbia.next[1:] %}<div class="others">Ostali oglasi:
+  <ul class="comps">{% for x in r.serbia.next[1:] %} <li><a href="{{ x.url }}" target="_blank" rel="noopener">{{ n(x.price) }} e</a> <span>{{ x.year }}, {% if x.km %}{{ n(x.km) }} km{% else %}km nepoznato{% endif %}</span></li>{% endfor %}</ul></div>{% endif %}
+ </div>
+
+{#- Bane 24.11.2026: a "max to pay" above the asking price only confuses; the card speaks only when the price
+    has to come down for the deal to work. #}
+ {% if big %}<div class="max"><p class="big">Prvo upiši cenu popravke, pa vidi da li se isplati.</p></div>
+ {% elif r.max_buy is none %}<div class="max"><p class="room neg"><b>Ne isplati se ni po kojoj ceni.</b></p></div>
+ {% elif room < 0 %}<div class="max">
+  <p class="big">Da bi se isplatio, cena auta mora da padne na <b>{{ n(r.max_buy) }} e</b>{% if net %} neto{% endif %}</p>
+  <p class="why">Sad računamo {{ n(cost.buy) }} e, znači treba spustiti još {{ n(-room) }} e.</p>
+ </div>{% endif %}
+
+ {% if ns.chk %}<ul class="warn" aria-label="Upozorenja">
+  {% for f in ns.chk %}<li class="chk">{{ f.rstrip(".") }}</li>{% endfor %}
+ </ul>{% endif %}
+
+ <p class="facts">{{ "privatno" if d.seller == "private" else "plac" }} · {{ {"willhaben": "willhaben", "mobilede": "mobile.de"}.get(d.source, "AutoScout24") }}
+  · {{ d.country }}{% if d.city %}, {{ d.city }}{% endif %}
+  {%- if now and c.first_seen %}{% set days = ((now - c.first_seen) / 86400)|int %} · {% if days == 0 %}<span class="tag">novo danas</span>{% else %}nađen pre {{ days }} d{% endif %}{% endif %}
+  · <a href="{{ d.url }}" target="_blank" rel="noopener">Otvori oglas</a></p>
+
+ {% if r.equipment %}<ul class="eq" aria-label="Oprema">{% for e in r.equipment %}<li>{{ e }}</li>{% endfor %}</ul>{% endif %}
+
+ <details class="more"><summary>Izmeni iznose i ocenu ili sakrij auto</summary>
+  <form class="edit" method="post" action="/override">
+   <input type="hidden" name="car_id" value="{{ d.id }}">
+   <input type="hidden" name="back" value="/{{ qs('sort', sort) }}#car-{{ d.id }}">
+   <label>Popust na cenu auta (e)<input name="buy_discount" inputmode="numeric" pattern="[0-9. ]*" value="{{ c.override.buy_discount if c.override.buy_discount is number else '' }}" placeholder="{{ cost.buy_discount }}"></label>
+   <label>Dovoz (e)<input name="transport" inputmode="numeric" pattern="[0-9. ]*" value="{{ c.override.transport if c.override.transport is number else '' }}" placeholder="{{ cost.transport }}"></label>
+   <label>Popravka (e)<input name="repair" inputmode="numeric" pattern="[0-9. ]*" value="{{ c.override.repair if c.override.repair is number else '' }}" placeholder="{{ cost.repair }}"></label>
+   <label>Carina (e)<input name="carina" inputmode="numeric" pattern="[0-9. ]*" value="{{ c.override.carina if c.override.carina is number else '' }}" placeholder="oko {{ cost.import.total|round|int }}"></label>
+   <fieldset><legend>Novky kaže</legend>
+    {% for val in verdicts %}<label class="pick"><input type="radio" name="verdict" value="{{ val }}" {{ "checked" if c.override.verdict == val }}>{{ val }}</label>{% endfor %}
+    <label class="pick"><input type="radio" name="verdict" value="" {{ "checked" if not c.override.verdict }}>bez ocene</label>
+    <label class="note">Njegova reč<input name="verdict_note" maxlength="80" value="{{ c.override.verdict_note or '' }}" placeholder="npr. ide brzo"></label>
+   </fieldset>
+   <div class="act"><button class="btn primary">Sačuvaj i preračunaj</button><button class="btn ghost" name="hidden" value="1">Sakrij auto</button></div>
+  </form>
+ </details>
+</article>
+{% else %}
+<section class="empty">
+ {% if last_run == "još nije" %}
+  <h2>Skener još nije radio</h2>
+  <p>Pokreni skeniranje, pa osveži ovu stranu.</p>
+  <p><code>python -m carfinder.scan</code></p>
+ {% else %}
+  <h2>Nema auta za ove filtere</h2>
+  <p>Proširi izbor ili sačekaj novo skeniranje.</p>
+  <div class="acts">
+   {% if active %}<a class="btn ghost chip" href="/">Poništi filtere</a>{% endif %}
+   {% if not show_all %}<a class="btn ghost chip" href="{{ qs('all', '1') }}">Prikaži i one ispod cilja</a>{% endif %}
+  </div>
+  <p class="run">Novo skeniranje: <code>python -m carfinder.scan</code></p>
+ {% endif %}
+</section>
+{% endfor %}
+</main>
+<script>
+document.querySelectorAll("[data-autosubmit]").forEach(function (el) {
+  el.addEventListener("change", function () { el.form.submit(); });
+});
+document.addEventListener("submit", function () {
+  document.body.classList.add("busy");
+  document.getElementById("list").setAttribute("aria-busy", "true");
+});
+window.addEventListener("pageshow", function () {
+  document.body.classList.remove("busy");
+  document.getElementById("list").removeAttribute("aria-busy");
+});
+</script>
+</body></html>

@@ -1,0 +1,988 @@
+[
+ {
+  "id": "1147219773",
+  "description": "VW Golf Rabbit Cabrio el. Verdeck TDI",
+  "attributes": {
+   "attribute": [
+    {
+     "name": "LOCATION",
+     "values": [
+      "Klagenfurt"
+     ]
+    },
+    {
+     "name": "DISPOSED",
+     "values": [
+      "0"
+     ]
+    },
+    {
+     "name": "POSTCODE",
+     "values": [
+      "9020"
+     ]
+    },
+    {
+     "name": "STATE",
+     "values": [
+      "Kärnten"
+     ]
+    },
+    {
+     "name": "CONDITION_REPORT",
+     "values": [
+      "-1"
+     ]
+    },
+    {
+     "name": "MILEAGE",
+     "values": [
+      "185000"
+     ]
+    },
+    {
+     "name": "fnmmocount",
+     "values": [
+      "12"
+     ]
+    },
+    {
+     "name": "CAR_MODEL/MAKE",
+     "values": [
+      "1065"
+     ]
+    },
+    {
+     "name": "ORG_UUID",
+     "values": [
+      "e72925b8-c52d-4239-b1b8-c82a3667e9e5"
+     ]
+    },
+    {
+     "name": "HEADING",
+     "values": [
+      "VW Golf Rabbit Cabrio el. Verdeck TDI"
+     ]
+    },
+    {
+     "name": "PUBLISHED",
+     "values": [
+      "1795445878000"
+     ]
+    },
+    {
+     "name": "COUNTRY",
+     "values": [
+      "Österreich"
+     ]
+    },
+    {
+     "name": "NO_OF_DOORS",
+     "values": [
+      "2"
+     ]
+    },
+    {
+     "name": "CAR_MODEL/MODEL",
+     "values": [
+      "1691"
+     ]
+    },
+    {
+     "name": "PRICE/AMOUNT",
+     "values": [
+      "500.0"
+     ]
+    },
+    {
+     "name": "NOOFSEATS",
+     "values": [
+      "4"
+     ]
+    },
+    {
+     "name": "ADTYPE_ID",
+     "values": [
+      "20"
+     ]
+    },
+    {
+     "name": "ADID",
+     "values": [
+      "1147219773"
+     ]
+    },
+    {
+     "name": "ORGID",
+     "values": [
+      "22791478"
+     ]
+    },
+    {
+     "name": "YEAR_MODEL",
+     "values": [
+      "2020"
+     ]
+    },
+    {
+     "name": "SEO_URL",
+     "values": [
+      "gebrauchtwagen/d/auto/vw-golf-rabbit-cabrio-el-verdeck-tdi-1147219773/"
+     ]
+    },
+    {
+     "name": "ALL_IMAGE_URLS",
+     "values": [
+      "3/114/721/9773_-1117570377.jpg;3/114/721/9773_-1628653476.jpg;3/114/721/9773_1065215.jpg;3/114/721/9773_-1636886000.jpg;3/114/721/9773_-187041687.jpg;3/114/721/9773_942087194.jpg;3/114/721/9773_-1244387773.jpg;3/114/721/9773_86841175.jpg;3/114/721/9773_2074775646.jpg;3/114/721/9773_1925499886.jpg;3/114/721/9773_1076329956.jpg;3/114/721/9773_-884253981.jpg"
+     ]
+    },
+    {
+     "name": "PUBLISHED_String",
+     "values": [
+      "2026-11-23T15:57:58Z"
+     ]
+    },
+    {
+     "name": "ENGINE/EFFECT",
+     "values": [
+      "66"
+     ]
+    },
+    {
+     "name": "ISPRIVATE",
+     "values": [
+      "1"
+     ]
+    },
+    {
+     "name": "PRODUCT_ID",
+     "values": [
+      "40020"
+     ]
+    },
+    {
+     "name": "MMO",
+     "values": [
+      "https://cache.willhaben.at/mmo/3/114/721/9773_-1117570377_hoved.jpg"
+     ]
+    },
+    {
+     "name": "ENGINE/FUEL",
+     "values": [
+      "100003"
+     ]
+    },
+    {
+     "name": "TRANSMISSION",
+     "values": [
+      "180001"
+     ]
+    },
+    {
+     "name": "AD_UUID",
+     "values": [
+      "01a208df-7de9-733a-941d-46b77db51ee7"
+     ]
+    },
+    {
+     "name": "WARRANTY",
+     "values": [
+      "-1"
+     ]
+    },
+    {
+     "name": "CONDITION",
+     "values": [
+      "20"
+     ]
+    },
+    {
+     "name": "PRICE",
+     "values": [
+      "500"
+     ]
+    },
+    {
+     "name": "PRICE_FOR_DISPLAY",
+     "values": [
+      "€ 500"
+     ]
+    },
+    {
+     "name": "ENGINE/FUEL_RESOLVED",
+     "values": [
+      "Diesel"
+     ]
+    },
+    {
+     "name": "TRANSMISSION_RESOLVED",
+     "values": [
+      "Schaltgetriebe"
+     ]
+    },
+    {
+     "name": "CONDITION_RESOLVED",
+     "values": [
+      "Gebrauchtwagen"
+     ]
+    },
+    {
+     "name": "WARRANTY_RESOLVED",
+     "values": [
+      "Nein"
+     ]
+    }
+   ]
+  }
+ },
+ {
+  "id": "963232721",
+  "description": "VW Golf Kombi",
+  "attributes": {
+   "attribute": [
+    {
+     "name": "LOCATION",
+     "values": [
+      "Frantschach"
+     ]
+    },
+    {
+     "name": "DISPOSED",
+     "values": [
+      "0"
+     ]
+    },
+    {
+     "name": "POSTCODE",
+     "values": [
+      "9413"
+     ]
+    },
+    {
+     "name": "STATE",
+     "values": [
+      "Kärnten"
+     ]
+    },
+    {
+     "name": "CONDITION_REPORT",
+     "values": [
+      "-1"
+     ]
+    },
+    {
+     "name": "MILEAGE",
+     "values": [
+      "270000"
+     ]
+    },
+    {
+     "name": "fnmmocount",
+     "values": [
+      "6"
+     ]
+    },
+    {
+     "name": "CAR_MODEL/MAKE",
+     "values": [
+      "1065"
+     ]
+    },
+    {
+     "name": "ORG_UUID",
+     "values": [
+      "0fe1e767-0f24-47f5-b79d-c82a3667e9e5"
+     ]
+    },
+    {
+     "name": "HEADING",
+     "values": [
+      "VW Golf Kombi"
+     ]
+    },
+    {
+     "name": "PUBLISHED",
+     "values": [
+      "1795103999000"
+     ]
+    },
+    {
+     "name": "COUNTRY",
+     "values": [
+      "Österreich"
+     ]
+    },
+    {
+     "name": "NO_OF_DOORS",
+     "values": [
+      "5"
+     ]
+    },
+    {
+     "name": "CAR_MODEL/MODEL",
+     "values": [
+      "1691"
+     ]
+    },
+    {
+     "name": "PRICE/AMOUNT",
+     "values": [
+      "1200.0"
+     ]
+    },
+    {
+     "name": "NOOFSEATS",
+     "values": [
+      "5"
+     ]
+    },
+    {
+     "name": "ADTYPE_ID",
+     "values": [
+      "20"
+     ]
+    },
+    {
+     "name": "ADID",
+     "values": [
+      "963232721"
+     ]
+    },
+    {
+     "name": "ORGID",
+     "values": [
+      "19960128"
+     ]
+    },
+    {
+     "name": "YEAR_MODEL",
+     "values": [
+      "2013"
+     ]
+    },
+    {
+     "name": "SEO_URL",
+     "values": [
+      "gebrauchtwagen/d/auto/vw-golf-kombi-963232721/"
+     ]
+    },
+    {
+     "name": "ALL_IMAGE_URLS",
+     "values": [
+      "1/963/232/721_1508915076.jpg;1/963/232/721_-2131485294.jpg;1/963/232/721_-1418895167.jpg;1/963/232/721_-1714188179.jpg;1/963/232/721_1450704553.jpg;1/963/232/721_-1219339057.jpg"
+     ]
+    },
+    {
+     "name": "PUBLISHED_String",
+     "values": [
+      "2026-11-19T16:59:59Z"
+     ]
+    },
+    {
+     "name": "ENGINE/EFFECT",
+     "values": [
+      "77"
+     ]
+    },
+    {
+     "name": "ISPRIVATE",
+     "values": [
+      "1"
+     ]
+    },
+    {
+     "name": "PRODUCT_ID",
+     "values": [
+      "40020"
+     ]
+    },
+    {
+     "name": "MMO",
+     "values": [
+      "https://cache.willhaben.at/mmo/1/963/232/721_1508915076_hoved.jpg"
+     ]
+    },
+    {
+     "name": "ENGINE/FUEL",
+     "values": [
+      "100003"
+     ]
+    },
+    {
+     "name": "TRANSMISSION",
+     "values": [
+      "180001"
+     ]
+    },
+    {
+     "name": "AD_UUID",
+     "values": [
+      "01a1f486-9d9b-79e8-a1fa-de7b442444cf"
+     ]
+    },
+    {
+     "name": "WARRANTY",
+     "values": [
+      "-1"
+     ]
+    },
+    {
+     "name": "CONDITION",
+     "values": [
+      "30"
+     ]
+    },
+    {
+     "name": "PRICE",
+     "values": [
+      "1200"
+     ]
+    },
+    {
+     "name": "PRICE_FOR_DISPLAY",
+     "values": [
+      "€ 1.200"
+     ]
+    },
+    {
+     "name": "ENGINE/FUEL_RESOLVED",
+     "values": [
+      "Diesel"
+     ]
+    },
+    {
+     "name": "TRANSMISSION_RESOLVED",
+     "values": [
+      "Schaltgetriebe"
+     ]
+    },
+    {
+     "name": "CONDITION_RESOLVED",
+     "values": [
+      "Unfallwagen"
+     ]
+    },
+    {
+     "name": "WARRANTY_RESOLVED",
+     "values": [
+      "Nein"
+     ]
+    }
+   ]
+  }
+ },
+ {
+  "id": "1119340670",
+  "description": "VW Golf Variant Sport Austria 1,6 TDI",
+  "attributes": {
+   "attribute": [
+    {
+     "name": "LOCATION",
+     "values": [
+      "Pinsdorf"
+     ]
+    },
+    {
+     "name": "DISPOSED",
+     "values": [
+      "0"
+     ]
+    },
+    {
+     "name": "ENGINEVOLUME",
+     "values": [
+      "1598"
+     ]
+    },
+    {
+     "name": "POSTCODE",
+     "values": [
+      "4812"
+     ]
+    },
+    {
+     "name": "DEFECTS_LIABILITY",
+     "values": [
+      "1"
+     ]
+    },
+    {
+     "name": "STATE",
+     "values": [
+      "Oberösterreich"
+     ]
+    },
+    {
+     "name": "ORGNAME",
+     "values": [
+      "Auto Thalhammer GmbH"
+     ]
+    },
+    {
+     "name": "CONDITION_REPORT",
+     "values": [
+      "-1"
+     ]
+    },
+    {
+     "name": "MILEAGE",
+     "values": [
+      "200000"
+     ]
+    },
+    {
+     "name": "fnmmocount",
+     "values": [
+      "14"
+     ]
+    },
+    {
+     "name": "CAR_MODEL/MAKE",
+     "values": [
+      "1065"
+     ]
+    },
+    {
+     "name": "ORG_UUID",
+     "values": [
+      "a1e91cbd-29fd-42fd-ad47-c82a3667e9e5"
+     ]
+    },
+    {
+     "name": "HEADING",
+     "values": [
+      "VW Golf Variant Sport Austria 1,6 TDI"
+     ]
+    },
+    {
+     "name": "PUBLISHED",
+     "values": [
+      "1771944060000"
+     ]
+    },
+    {
+     "name": "COUNTRY",
+     "values": [
+      "Österreich"
+     ]
+    },
+    {
+     "name": "NO_OF_DOORS",
+     "values": [
+      "5"
+     ]
+    },
+    {
+     "name": "CAR_MODEL/MODEL",
+     "values": [
+      "1691"
+     ]
+    },
+    {
+     "name": "PRICE/AMOUNT",
+     "values": [
+      "990.0"
+     ]
+    },
+    {
+     "name": "NOOFSEATS",
+     "values": [
+      "5"
+     ]
+    },
+    {
+     "name": "ADTYPE_ID",
+     "values": [
+      "20"
+     ]
+    },
+    {
+     "name": "ADID",
+     "values": [
+      "1119340670"
+     ]
+    },
+    {
+     "name": "ORGID",
+     "values": [
+      "23319562"
+     ]
+    },
+    {
+     "name": "YEAR_MODEL",
+     "values": [
+      "2016"
+     ]
+    },
+    {
+     "name": "SEO_URL",
+     "values": [
+      "gebrauchtwagen/d/auto/vw-golf-variant-sport-austria-1-6-tdi-1119340670/"
+     ]
+    },
+    {
+     "name": "ALL_IMAGE_URLS",
+     "values": [
+      "0/111/934/0670_-1936785132.jpg;0/111/934/0670_-303822126.jpg;0/111/934/0670_-1864169656.jpg;0/111/934/0670_-1353249499.jpg;0/111/934/0670_-1985278269.jpg;0/111/934/0670_-1550451066.jpg;0/111/934/0670_-1545135935.jpg;0/111/934/0670_741411571.jpg;0/111/934/0670_688848655.jpg;0/111/934/0670_1253377920.jpg;0/111/934/0670_364447198.jpg;0/111/934/0670_2005665891.jpg;0/111/934/0670_-1871835237.jpg;0/111/934/0670_-357627351.jpg"
+     ]
+    },
+    {
+     "name": "PUBLISHED_String",
+     "values": [
+      "2026-02-24T15:41:00Z"
+     ]
+    },
+    {
+     "name": "ENGINE/EFFECT",
+     "values": [
+      "81"
+     ]
+    },
+    {
+     "name": "ISPRIVATE",
+     "values": [
+      "0"
+     ]
+    },
+    {
+     "name": "PRODUCT_ID",
+     "values": [
+      "305"
+     ]
+    },
+    {
+     "name": "MMO",
+     "values": [
+      "https://cache.willhaben.at/mmo/0/111/934/0670_-1936785132_hoved.jpg"
+     ]
+    },
+    {
+     "name": "ENGINE/FUEL",
+     "values": [
+      "100003"
+     ]
+    },
+    {
+     "name": "TRANSMISSION",
+     "values": [
+      "180001"
+     ]
+    },
+    {
+     "name": "AD_UUID",
+     "values": [
+      "99aa06b6-bb28-4d30-9522-b34e9d305250"
+     ]
+    },
+    {
+     "name": "WARRANTY",
+     "values": [
+      "-1"
+     ]
+    },
+    {
+     "name": "CONDITION",
+     "values": [
+      "30"
+     ]
+    },
+    {
+     "name": "PRICE",
+     "values": [
+      "990"
+     ]
+    },
+    {
+     "name": "PRICE_FOR_DISPLAY",
+     "values": [
+      "€ 990"
+     ]
+    },
+    {
+     "name": "ENGINE/FUEL_RESOLVED",
+     "values": [
+      "Diesel"
+     ]
+    },
+    {
+     "name": "TRANSMISSION_RESOLVED",
+     "values": [
+      "Schaltgetriebe"
+     ]
+    },
+    {
+     "name": "CONDITION_RESOLVED",
+     "values": [
+      "Unfallwagen"
+     ]
+    },
+    {
+     "name": "WARRANTY_RESOLVED",
+     "values": [
+      "Nein"
+     ]
+    }
+   ]
+  }
+ },
+ {
+  "id": "910100931",
+  "description": "VW Golf VI 4motion 1.6 TDI Trendl",
+  "attributes": {
+   "attribute": [
+    {
+     "name": "LOCATION",
+     "values": [
+      "Thalgau"
+     ]
+    },
+    {
+     "name": "DISPOSED",
+     "values": [
+      "0"
+     ]
+    },
+    {
+     "name": "ENGINEVOLUME",
+     "values": [
+      "1598"
+     ]
+    },
+    {
+     "name": "POSTCODE",
+     "values": [
+      "5303"
+     ]
+    },
+    {
+     "name": "DEFECTS_LIABILITY",
+     "values": [
+      "1"
+     ]
+    },
+    {
+     "name": "STATE",
+     "values": [
+      "Salzburg"
+     ]
+    },
+    {
+     "name": "ORGNAME",
+     "values": [
+      "Ahmad Al Dirani"
+     ]
+    },
+    {
+     "name": "CONDITION_REPORT",
+     "values": [
+      "1"
+     ]
+    },
+    {
+     "name": "MILEAGE",
+     "values": [
+      "270000"
+     ]
+    },
+    {
+     "name": "fnmmocount",
+     "values": [
+      "9"
+     ]
+    },
+    {
+     "name": "CAR_MODEL/MAKE",
+     "values": [
+      "1065"
+     ]
+    },
+    {
+     "name": "ORG_UUID",
+     "values": [
+      "ef5d5215-ff8a-4543-b186-58c64629bb87"
+     ]
+    },
+    {
+     "name": "HEADING",
+     "values": [
+      "VW Golf VI 4motion 1.6 TDI Trendl"
+     ]
+    },
+    {
+     "name": "PUBLISHED",
+     "values": [
+      "1794991723000"
+     ]
+    },
+    {
+     "name": "COUNTRY",
+     "values": [
+      "Österreich"
+     ]
+    },
+    {
+     "name": "NO_OF_DOORS",
+     "values": [
+      "5"
+     ]
+    },
+    {
+     "name": "CAR_MODEL/MODEL",
+     "values": [
+      "1691"
+     ]
+    },
+    {
+     "name": "PRICE/AMOUNT",
+     "values": [
+      "1400.0"
+     ]
+    },
+    {
+     "name": "NOOFSEATS",
+     "values": [
+      "5"
+     ]
+    },
+    {
+     "name": "ADTYPE_ID",
+     "values": [
+      "20"
+     ]
+    },
+    {
+     "name": "ADID",
+     "values": [
+      "910100931"
+     ]
+    },
+    {
+     "name": "ORGID",
+     "values": [
+      "1005850"
+     ]
+    },
+    {
+     "name": "YEAR_MODEL",
+     "values": [
+      "2013"
+     ]
+    },
+    {
+     "name": "SEO_URL",
+     "values": [
+      "gebrauchtwagen/d/auto/vw-golf-vi-4motion-1-6-tdi-trendl-910100931/"
+     ]
+    },
+    {
+     "name": "ALL_IMAGE_URLS",
+     "values": [
+      "1/910/100/931_-1773911451.jpg;1/910/100/931_860039787.jpg;1/910/100/931_293178861.jpg;1/910/100/931_-1497733996.jpg;1/910/100/931_998452973.jpg;1/910/100/931_801127195.jpg;1/910/100/931_-1987744523.jpg;1/910/100/931_397627444.jpg;1/910/100/931_570757479.jpg"
+     ]
+    },
+    {
+     "name": "PUBLISHED_String",
+     "values": [
+      "2026-11-18T09:48:43Z"
+     ]
+    },
+    {
+     "name": "ENGINE/EFFECT",
+     "values": [
+      "77"
+     ]
+    },
+    {
+     "name": "ISPRIVATE",
+     "values": [
+      "0"
+     ]
+    },
+    {
+     "name": "PRODUCT_ID",
+     "values": [
+      "305"
+     ]
+    },
+    {
+     "name": "IS_BUMPED",
+     "values": [
+      "1"
+     ]
+    },
+    {
+     "name": "MMO",
+     "values": [
+      "https://cache.willhaben.at/mmo/1/910/100/931_-1773911451_hoved.jpg"
+     ]
+    },
+    {
+     "name": "ENGINE/FUEL",
+     "values": [
+      "100003"
+     ]
+    },
+    {
+     "name": "TRANSMISSION",
+     "values": [
+      "180001"
+     ]
+    },
+    {
+     "name": "AD_UUID",
+     "values": [
+      "01a1c9cb-8e67-70a1-b2b9-7f243370d433"
+     ]
+    },
+    {
+     "name": "WARRANTY",
+     "values": [
+      "-1"
+     ]
+    },
+    {
+     "name": "CONDITION",
+     "values": [
+      "20"
+     ]
+    },
+    {
+     "name": "PRICE",
+     "values": [
+      "1400"
+     ]
+    },
+    {
+     "name": "PRICE_FOR_DISPLAY",
+     "values": [
+      "€ 1.400"
+     ]
+    },
+    {
+     "name": "ENGINE/FUEL_RESOLVED",
+     "values": [
+      "Diesel"
+     ]
+    },
+    {
+     "name": "TRANSMISSION_RESOLVED",
+     "values": [
+      "Schaltgetriebe"
+     ]
+    },
+    {
+     "name": "CONDITION_RESOLVED",
+     "values": [
+      "Gebrauchtwagen"
+     ]
+    },
+    {
+     "name": "WARRANTY_RESOLVED",
+     "values": [
+      "Nein"
+     ]
+    }
+   ]
+  }
+ }
+]
