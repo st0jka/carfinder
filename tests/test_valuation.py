@@ -62,7 +62,7 @@ def test_price_is_the_cheapest_clean_ad():
     assert sr["first"]["price"] == 7400
     assert sr["next"][0]["price"] == 7600
     assert sr["anchor"] == 7400            # the cheapest ad left after the bait
-    assert sr["price"] == 6734 and sr["sale_cut"] == 666
+    assert sr["price"] == 7150 and sr["sale_cut"] == 250   # 7,400 less the 250 sale cut
     assert sr["within_500"] == 3           # 7400, 7600, 7800
     assert sr["n"] == 6
     assert sr["km_factor"] == 1.0
@@ -80,7 +80,7 @@ def test_price_needs_three_ads():
     assert valuation.serbian_price(foreign(), comps(7000)) is None
     assert valuation.serbian_price(foreign(), comps(7000, 7100)) is None
     sr = valuation.serbian_price(foreign(), comps(7000, 7100, 7200))
-    assert sr["anchor"] == 7000 and sr["price"] == 6370
+    assert sr["anchor"] == 7000 and sr["price"] == 6750
 
 
 def test_no_price_when_bait_leaves_under_three_ads():
@@ -147,11 +147,11 @@ def test_only_extra_mileage_against_the_anchor_lowers_the_price():
     base = comps(9000, 9200, 9400, 9600, 9800, km=300000)
     for km in (200000, 300000):
         sr = valuation.serbian_price(foreign(km=km), base)
-        assert sr["km_factor"] == 1.0 and sr["price"] == 8190
+        assert sr["km_factor"] == 1.0 and sr["price"] == 8750
     high = valuation.serbian_price(foreign(km=350000), base)
     assert high["km_factor"] == pytest.approx(0.89 / 0.945)
     assert high["first"]["comparable_price"] == 8476
-    assert high["price"] == 7713 and high["sale_cut"] == 763
+    assert high["price"] == 8226 and high["sale_cut"] == 250   # 8,476 less the 250 sale cut
     assert high["anchor"] == 9000
 
 
@@ -159,7 +159,7 @@ def test_unknown_mileage_has_no_adjustment():
     missing_ad_km = valuation.serbian_price(foreign(km=320000), comps(7000, 7100, 7200))
     missing_car_km = valuation.serbian_price(foreign(), comps(7000, 7100, 7200, km=320000))
     assert missing_ad_km["km_factor"] == missing_car_km["km_factor"] == 1.0
-    assert missing_ad_km["price"] == missing_car_km["price"] == 6370
+    assert missing_ad_km["price"] == missing_car_km["price"] == 6750
 
 
 # --- variant matching --------------------------------------------------------
@@ -266,9 +266,9 @@ def test_conflicting_displacements_without_foreign_cc_cannot_produce_a_final_pri
     ads = comps(9000, 9200, 9400) + comps(8500, 8700, 8900, cc=1968)
     assert valuation.evaluate(foreign(cc=None, detailed=True), ads, {}, GOLF) is None
     provisional = valuation.evaluate(foreign(cc=None, detailed=False), ads, {}, GOLF)
-    assert provisional["sale"] == 7735 and not provisional["passes"]
+    assert provisional["sale"] == 8250 and not provisional["passes"]
     confirmed = valuation.evaluate(foreign(cc=1598, detailed=True), ads[:3], {}, GOLF)
-    assert confirmed["sale"] == 8190 and confirmed["passes"]
+    assert confirmed["sale"] == 8750 and confirmed["passes"]
 
 
 def test_displacement_inferred_from_comps_still_has_to_meet_the_engine_limit():
@@ -307,13 +307,13 @@ def test_target_is_1000_up_to_6000_then_proportional(cash, target):
 
 def test_evaluate_profit_and_exact_max_buy():
     result = valuation.evaluate(foreign(), comps(9000, 9200, 9400, 9600, 9800), {}, GOLF, DEC_2026)
-    assert result["serbia"]["price"] == result["sale"] == 8190
+    assert result["serbia"]["price"] == result["sale"] == 8750
     assert result["serbia"]["anchor"] == 9000
     assert result["cost"]["transport"] == 620
-    assert result["profit"] == 8190 - result["cost"]["cash"]
+    assert result["profit"] == 8750 - result["cost"]["cash"]
     best = result["max_buy"]
-    assert valuation.passes_at(foreign(), best, 8190, {}, GOLF, DEC_2026)
-    assert not valuation.passes_at(foreign(), best + 1, 8190, {}, GOLF, DEC_2026)
+    assert valuation.passes_at(foreign(), best, 8750, {}, GOLF, DEC_2026)
+    assert not valuation.passes_at(foreign(), best + 1, 8750, {}, GOLF, DEC_2026)
 
 
 def test_max_buy_none_when_even_free_car_misses_target():
@@ -595,7 +595,7 @@ def test_car_without_an_autoscout24_median_gets_no_label():
 def test_three_and_four_ads_raise_a_warning_but_can_pass(ads):
     base = comps(9000, 9200, 9400, 9600, 9800, 10000)[:ads]
     result = valuation.evaluate(foreign(detailed=True), base, {}, GOLF)
-    assert result["serbia"]["price"] == 8190 and result["serbia"]["n"] == ads
+    assert result["serbia"]["price"] == 8750 and result["serbia"]["n"] == ads
     assert result["profit"] >= result["target"]
     assert result["passes"] is True
     assert (valuation.THIN_MARKET_FLAG in result["flags"]) is (ads < 5)
@@ -708,10 +708,10 @@ def test_expert_tiguan_is_worth_8000_to_9000_and_is_no_deal_at_5999():
     assert (serbia["next"][0]["id"], serbia["next"][0]["price"]) == ("30629106", 10500)
     assert serbia["anchor"] == 8800 and serbia["n"] == 10
     assert all(ad["drive"] == "4x4" for ad in [serbia["first"], *serbia["next"]])
-    assert serbia["km_factor"] == 1.0 and serbia["sale_cut"] == 792
-    assert serbia["price"] == result["sale"] == 8008
+    assert serbia["km_factor"] == 1.0 and serbia["sale_cut"] == 250
+    assert serbia["price"] == result["sale"] == 8550   # 8,800 less the 250 sale cut
     assert 8000 <= result["sale"] <= 9000
-    assert result["profit"] == 8008 - result["cost"]["cash"]
+    assert result["profit"] == 8550 - result["cost"]["cash"]
     assert result["profit"] < result["target"]     # the tool said +2,990 on a target of 1,498
     assert result["passes"] is False
     assert result["max_buy"] < 5999
@@ -733,10 +733,11 @@ def test_expert_octavia_2017_manual_estate_is_no_deal_at_5700():
     assert serbia["anchor"] == 9950 and serbia["n"] == 7     # 9299 x 1.07 = 9949.9
     # the facelift came in 2017: a 2017 car that does not say so is priced without the 2018 facelift ads (9,450 ...)
     assert {ad["year"] for ad in scan.comparables_for(snapshots, car, OCTAVIA)} == {2016, 2017}
-    assert serbia["price"] == 9054
-    assert result["profit"] == 9054 - result["cost"]["cash"]
-    assert result["profit"] < result["target"]
-    assert result["passes"] is False
+    assert serbia["price"] == 9700   # 9,950 less the 250 sale cut
+    assert result["profit"] == 9700 - result["cost"]["cash"]
+    # NOVKY CONFLICT since Bane's 250 cut (27.11.2026): the importer's no deal at 5,700 now clears the target
+    assert (result["profit"], result["target"]) == (1720, 1330)
+    assert result["passes"] is True
 
 
 def test_expert_octavia_2015_dsg_estate_at_2790_drops_the_newer_4900_ad_as_bait_and_rests_on_6500():
@@ -749,8 +750,8 @@ def test_expert_octavia_2015_dsg_estate_at_2790_drops_the_newer_4900_ad_as_bait_
     assert (serbia["first"]["price"], serbia["next"][0]["price"]) == (6500, 8650)
     assert serbia["skipped_bait"] == 1 and serbia["n"] == 11
     assert serbia["km_factor"] == 1.0      # the cheapest Serbian car has more kilometres
-    assert serbia["anchor"] == 6500 and serbia["price"] == 5915
-    assert result["profit"] == 5915 - result["cost"]["cash"]
+    assert serbia["anchor"] == 6500 and serbia["price"] == 6250
+    assert result["profit"] == 6250 - result["cost"]["cash"]
     assert result["profit"] >= result["target"]
     assert result["passes"] is True
     assert not any(f.startswith("sumnjivo") for f in result["flags"])   # 2,790 is under 0.4 x the old 9,300
@@ -758,7 +759,7 @@ def test_expert_octavia_2015_dsg_estate_at_2790_drops_the_newer_4900_ad_as_bait_
     without_4900 = [ad for ad in matched if ad["price"] != 4900]
     other = valuation.evaluate(car, without_4900, {}, OCTAVIA, DEC_2026)
     assert other["serbia"]["skipped_bait"] == 0 and other["serbia"]["n"] == 11
-    assert other["serbia"]["anchor"] == 6500 and other["serbia"]["price"] == 5915
+    assert other["serbia"]["anchor"] == 6500 and other["serbia"]["price"] == 6250
     assert other["passes"] is True
     # the facelift came in 2017: every 2016 ad is from before it, so a 2015 car keeps them
     assert {ad["year"] for ad in matched} == {2014, 2015, 2016}
@@ -789,7 +790,7 @@ def test_one_year_newer_ad_is_lowered_seven_percent_and_can_be_the_anchor():
     # our car is of 2015: a 2016 ad at 8,000 counts as 7,440, under the 7,600 ad of our own year
     sr = valuation.serbian_price(foreign(), comps(8000, year=2016) + comps(7600, 7800, 9000))
     assert (sr["first"]["price"], sr["first"]["adjusted"], sr["first"]["year"]) == (8000, 7440, 2016)
-    assert sr["anchor"] == 7440 and sr["price"] == 6770
+    assert sr["anchor"] == 7440 and sr["price"] == 7190
 
 
 @pytest.mark.parametrize("model", models.MODELS, ids=lambda model: model["as24"])
@@ -804,7 +805,7 @@ def test_cheapest_ad_is_the_anchor_and_the_second_ad_does_not_move_the_price():
     close = valuation.serbian_price(foreign(), comps(7000, 7050, 9000))
     far = valuation.serbian_price(foreign(), comps(7000, 9300, 9400))   # 7,000 is 75.3% of 9,300: no bait
     assert close["anchor"] == far["anchor"] == 7000
-    assert close["price"] == far["price"] == 6370
+    assert close["price"] == far["price"] == 6750
 
 
 @pytest.mark.parametrize("base_title,sub_title", [
@@ -826,7 +827,7 @@ def test_title_naming_another_generation_than_the_year_gives_has_no_price():
     assert valuation.evaluate(foreign(year=2011, title="VW Golf 7 1.6 TDI"), ads, {}, GOLF) is None
     for title in ("VW Golf VI 1.6 TDI", "VW Golf 6 1.6 TDI", "VW Golf 1.6 TDI", None):   # Golf 6, or no name
         priced = valuation.evaluate(foreign(year=2011, title=title), ads, {}, GOLF)
-        assert priced["serbia"]["anchor"] == 9000 and priced["serbia"]["price"] == 8190
+        assert priced["serbia"]["anchor"] == 9000 and priced["serbia"]["price"] == 8750
 
 
 def test_novkys_passat_b6_and_golf_6_gtd_use_their_own_ads_and_sell_near_5000(monkeypatch):
@@ -856,8 +857,9 @@ def test_novkys_passat_b6_and_golf_6_gtd_use_their_own_ads_and_sell_near_5000(mo
     snapshots[b6_snapshot] = [dict(ad, title="Volkswagen Passat B6", model="Passat B6") for ad in b7_ads[:3]]
     b6 = valuation.evaluate(passat, scan.comparables_for(snapshots, passat, PASSAT), {}, PASSAT, DEC_2026)
     assert b6["serbia"]["anchor"] == 6400 and b6["serbia"]["km_factor"] == pytest.approx(0.9406)
-    assert b6["serbia"]["price"] == b6["sale"] == 5478
-    assert b6["sale"] == pytest.approx(5000, rel=0.10)
+    assert b6["serbia"]["price"] == b6["sale"] == 5770   # 6,400 x 0.9406 = 6,020, less the 250 sale cut
+    # NOVKY CONFLICT since Bane's 250 cut (27.11.2026): 770 over his "5000 max da ga prodas"
+    assert b6["sale"] - 5000 == 770
     assert not b6["passes"]
 
     gtd = foreign(year=2010, km=265000, cc=1968, kw=125, body="sedan", price=2800,
@@ -877,8 +879,8 @@ def test_novkys_passat_b6_and_golf_6_gtd_use_their_own_ads_and_sell_near_5000(mo
     assert (serbia["first"]["price"], serbia["first"]["adjusted"]) == (6200, 5766)   # 6,200 x 0.93
     assert serbia["anchor"] == 5766 and serbia["n"] == 6
     assert serbia["km_factor"] == pytest.approx(0.9835)
-    assert serbia["price"] == 5161
-    assert serbia["price"] == pytest.approx(5000, rel=0.10)
+    assert serbia["price"] == 5421   # 5,766 x 0.9835 = 5,671, less the 250 sale cut
+    assert serbia["price"] == pytest.approx(5000, rel=0.10)   # 421 over Novky's 5,000 max, still inside 10%
     assert serbia["price"] < 6680         # the old rule: mean of 6,200 and 7,990 as they ask, x 0.95 x 0.991
     named = valuation.evaluate(dict(gtd, title="VW Golf 6 GTD"), matched, {}, GOLF, DEC_2026)
     assert named["sale"] == serbia["price"]   # naming its own generation changes nothing
@@ -887,16 +889,16 @@ def test_novkys_passat_b6_and_golf_6_gtd_use_their_own_ads_and_sell_near_5000(mo
 def test_same_sale_cut_applies_to_cheaper_ads_and_other_variants():
     gtd = foreign(year=2010, title="Golf 6 GTD")
     cheap = valuation.evaluate(gtd, comps(4900, 5000, 5100, year=2010), {}, GOLF)
-    assert cheap["sale"] == 4459 and cheap["serbia"]["sale_cut"] == 441
+    assert cheap["sale"] == 4650 and cheap["serbia"]["sale_cut"] == 250
     base = valuation.evaluate(dict(gtd, title="Golf 6"), comps(6400, 6500, 6600, year=2010), {}, GOLF)
-    assert base["sale"] == 5824 and base["serbia"]["sale_cut"] == 576
+    assert base["sale"] == 6150 and base["serbia"]["sale_cut"] == 250
     diesel = foreign(year=2011, title="Passat B6", fuel="diesel", kw=110, cc=1968)
     diesel_ads = comps(6400, 6500, 6600, year=2011, fuel="diesel", kw=110, cc=1968)
-    assert valuation.evaluate(diesel, diesel_ads, {}, PASSAT)["sale"] == 5824
+    assert valuation.evaluate(diesel, diesel_ads, {}, PASSAT)["sale"] == 6150
     cng = dict(diesel, fuel="petrol_cng", cc=None, detailed=True)
     cng_ads = comps(6400, 6500, 6600, year=2011, fuel="petrol_cng", kw=110, cc=1390)
     assert all(valuation.is_match(cng, ad) for ad in cng_ads)
-    assert valuation.evaluate(cng, cng_ads, {}, PASSAT)["sale"] == 5824
+    assert valuation.evaluate(cng, cng_ads, {}, PASSAT)["sale"] == 6150
     mislabelled = dict(cng, cc=1598)
     matched = [ad for ad in cng_ads if valuation.is_match(mislabelled, ad)]
     assert valuation.evaluate(mislabelled, matched, {}, PASSAT) is None
@@ -984,7 +986,7 @@ def test_ogis_older_x3_e83_of_2010_is_priced_on_e83_ads_not_as_the_newer_f25():
     matched = scan.comparables_for({snapshot: X3_ADS}, car, X3)
     assert sorted(ad["price"] for ad in matched) == [5500, 5800, 6000, 6300]
     serbia = valuation.serbian_price(car, matched)
-    assert serbia["anchor"] == 5885 and serbia["price"] == 5355   # 5,500 of 2009 raised 7%, then the 9% cut
+    assert serbia["anchor"] == 5885 and serbia["price"] == 5635   # 5,500 of 2009 raised 7%, then the 250 sale cut
     assert valuation.new_price_of(car, X3) == 34000               # the carina of an E83, not of an F25
 
 
@@ -1036,9 +1038,9 @@ def test_golf_7_5_look_of_2016_is_not_priced_at_facelift_money():
     look = dict(plain, title="VW Golf 7.5 Look 2.0 TDI")
     look_ads = scan.comparables_for({snapshot: GOLF7_ADS}, look, GOLF)
     assert sorted(ad["price"] for ad in look_ads) == [7500, 8000, 8300]   # not the 9,600 and 10,000 of the real 7.5
-    assert valuation.serbian_price(look, look_ads)["price"] == 6825      # 7,500 less the 9% sale cut
+    assert valuation.serbian_price(look, look_ads)["price"] == 7250      # 7,500 less the 250 sale cut
     plain_ads = scan.comparables_for({snapshot: GOLF7_ADS}, plain, GOLF)
-    assert valuation.serbian_price(plain, plain_ads)["price"] == 6825
+    assert valuation.serbian_price(plain, plain_ads)["price"] == 7250
 
 
 def test_speed_of_an_x3_e83_is_read_without_the_f25_and_unnamed_2010_ads():

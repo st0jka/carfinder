@@ -129,7 +129,7 @@ def test_serbian_line_names_the_cheapest_ad_the_next_one_and_how_many_there_are(
     assert "Na polovniautomobili.com najjeftiniji oglas:" in page
     assert "<b>9.000 e</b></a>, sledeći <a" in page and "<b>9.100 e</b></a>." in page
     assert "Oglasa ukupno 6, od toga 5 najviše 500 e iznad najjeftinijeg." in page
-    assert "najjeftiniji oglas 9.000 e, minus 810 e za cenkanje u Srbiji</span>" in page
+    assert "najjeftiniji oglas 9.000 e, minus 250 e za cenkanje u Srbiji</span>" in page
     assert "Tanko tržište" not in page and "godinu stariji" not in page and "mamac" not in page
 
 
@@ -156,7 +156,7 @@ def test_skipped_bait_and_the_mileage_cut_are_named(client):
     page = client.get("/?all=1").text
     assert "preskočen mamac ispod njih: 1." in page
     assert "<b>9.000 e</b>" in page and "3.000 e" not in page
-    assert "manje 7,7% za razliku u kilometraži, minus 748 e za cenkanje u Srbiji</span>" in page
+    assert "manje 7,7% za razliku u kilometraži, minus 250 e za cenkanje u Srbiji</span>" in page
 
 
 def test_car_priced_by_the_old_rule_waits_for_its_next_scan(client):
@@ -275,7 +275,7 @@ def test_banes_own_import_figure_is_shown_as_typed_and_reprices(client):
 
 
 def test_worst_case_is_labelled_as_customs_counting_the_invoice(client):
-    save(foreign(price=7800), prices=(13200, 13300, 13400, 13500, 13600))
+    save(foreign(price=7800), prices=(12300, 12400, 12500, 12600, 12700))   # sale 12,050 after the 250 cut
     page = client.get("/?all=1").text
     assert "Ako carina računa po fakturi" in page and "Ako carina uzme fakturu" not in page
 
@@ -291,7 +291,7 @@ def worst_stat(page):
 
 
 def test_invoice_case_shows_its_profit_when_it_drops_under_the_target(client):
-    result = save(foreign(price=7800), prices=(13200, 13300, 13400, 13500, 13600))
+    result = save(foreign(price=7800), prices=(12300, 12400, 12500, 12600, 12700))   # sale 12,050 after the 250 cut
     assert result["profit"] >= result["target"] > result["profit_worst"]
     stat = worst_stat(client.get("/?all=1").text)
     assert stat == f"zarada {'{:+,}'.format(result['profit_worst']).replace(',', '.')} e, ispod cilja"
@@ -515,8 +515,8 @@ def test_newer_serbian_ad_and_sale_cut_have_separate_labels(client):
     db.save_car(db.connect(), car, valuation.evaluate(car, ads, {}, GOLF), GOLF["as24"])
     page = client.get("/?all=1").text
     assert "godinu noviji, računa se kao 5.766 e" in page
-    assert "minus 519 e za cenkanje u Srbiji" in page
-    assert "5.247 e</td>" in troskovi(page)
+    assert "minus 250 e za cenkanje u Srbiji" in page
+    assert "5.516 e</td>" in troskovi(page)   # 5,766 less the 250 sale cut
 
 
 def test_repair_shows_in_the_bill_of_a_damaged_deal(client):

@@ -4,7 +4,7 @@ from carfinder import customs, market, models, transport
 MIN_ADS = 3                # with fewer clean ads of the exact variant there is no market to read a price from
 THIN_MARKET_ADS = 5        # useful context when the exact variant has only three or four clean ads
 YEAR_STEP = 0.07           # cached low-end asks move about 7–7.6% per model year
-ASK_TO_SALE_CUT = 0.09     # 9% brings the cheapest credible asks, after year and mileage, near Novky's sale estimates
+ASK_TO_SALE_EUR = 250      # Bane 27.11.2026: a cash buyer gets "uglavnom 200-300eur" off the PA ask
 BAIT_SHARE = 0.75          # a cheapest ad under 75% of the next one stands alone: bait or a hidden wreck
 MAX_BAIT_ADS = 2           # a third lonely cheap ad in a row is the market itself, not bait
 DEFAULT_BUY_DISCOUNT_EUR = 200   # midpoint of the owner's usual €100–€300 reduction abroad
@@ -218,7 +218,7 @@ def serbian_price(car, comparables):
         return None
     first = ads[0]
     asking = first["comparable_price"]
-    price = round(asking * (1 - ASK_TO_SALE_CUT))
+    price = asking - ASK_TO_SALE_EUR
     return {
         "price": price,
         "sale_cut": asking - price,

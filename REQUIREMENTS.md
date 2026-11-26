@@ -73,9 +73,8 @@ who checks the tool's output; his figures are ground truth.
   Sandero, Punto, 500), 1,106 DE/AT cars: 2 at target, both bait or thin; best real car Polo V +529. They sell in
   Serbia for 3-5k and ~1,800 of transport and import bill eat the gap. Bane 25.11 decided to scan them anyway, so a
   good one shows the day it is listed.
-- Bane 25.11: "to sto vidis na polovnim cene uglavnom za kes odu za 200-500eur ispod tog". It conflicts with
-  Novky's own figures (B klasa, Passat CNG, Golf 6 GTD sold 12-17% under the cheapest ask); the 9% cut stays until
-  Bane decides.
+- Bane 27.11.2026 on how far under the cheapest PA ask a cash buyer gets the car: "pa zavisi...ali uglavnom bude
+  200-300eur". The sale price is the cheapest ask minus 250 e, shown on the card as "minus 250 e za cenkanje u Srbiji".
 - A title that names another generation than the year implies (B6 sold as 2011) is not priced against the wrong one.
 - Ogi 26.11 (a working importer): "gleda po modelu i restajlingu... Na prelazne godine masi mnogo", an older BMW
   worth 5k was valued at the newer one's 10k. A car is priced only on ads of its own generation and its own side of a
