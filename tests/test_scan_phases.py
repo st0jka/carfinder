@@ -420,16 +420,18 @@ def test_petrol_passat_is_saved_hidden_without_a_petrol_snapshot(conn, fetched, 
     assert saved_result(conn) is None
 
 
-@pytest.mark.parametrize("hour,group", [(0, 0), (2, 0), (3, 1), (12, 4), (21, 7), (23, 7)])
-def test_every_run_scans_the_core_models_and_one_eighth_of_the_daily_ones(hour, group):
-    run_models = scan.models_of_run(hour)
+@pytest.mark.parametrize("run_number,group", [(0, 0), (1, 1), (4, 4), (7, 7), (8, 0), (13, 5)])
+def test_every_run_scans_the_core_models_and_one_eighth_of_the_daily_ones(run_number, group):
+    run_models = scan.models_of_run(run_number)
     assert run_models[:20] == models.CORE_MODELS
     assert run_models[20:] == models.DAILY_MODELS[group::8]
     assert 14 <= len(run_models) - 20 <= 15   # 118 daily models in 8 groups
 
 
-def test_every_daily_model_is_scanned_once_a_day():
-    runs = [scan.models_of_run(hour) for hour in range(0, 24, scan.SCAN_EVERY_H)]
+@pytest.mark.parametrize("first_run", [0, 5, 37])
+def test_any_eight_runs_in_a_row_scan_every_daily_model_once(first_run):
+    # GitHub starts scheduled runs late or drops them (25.11.2026: 2 of 6 ran), so the turn follows runs, not hours
+    runs = [scan.models_of_run(number) for number in range(first_run, first_run + 8)]
     daily = [model["as24"] for run_models in runs for model in run_models[20:]]
     assert sorted(daily) == sorted(model["as24"] for model in models.DAILY_MODELS)
     assert len(daily) == len(set(daily)) == 118
@@ -764,3 +766,10 @@ def test_main_does_nothing_while_another_scan_holds_the_lock(home, fetched):
     scan.main()
     lock.close()
     assert fetched == [] and db.last_runs(home) == []
+
+
+def test_run_count_counts_every_logged_run_partial_ones_too(conn):
+    assert db.run_count(conn) == 0
+    db.log_run(conn, 1.0, "ok", "")
+    db.log_run(conn, 2.0, "partial", "willhaben blocked")
+    assert db.run_count(conn) == 2

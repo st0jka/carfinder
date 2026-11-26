@@ -1,7 +1,7 @@
 name: scan
 on:
   schedule:
-    - cron: "17 */3 * * *"   # every 3 hours; the UTC hour picks the group of daily models (scan.models_of_run)
+    - cron: "17 */3 * * *"   # backup only: GitHub drops many scheduled runs, so each run starts the next one
   workflow_dispatch:
 
 concurrency:
@@ -84,6 +84,9 @@ jobs:
       - name: Keep the schedule on
         if: always()
         run: gh api -X PUT "repos/${{ github.repository }}/actions/workflows/scan.yml/enable"
+      - name: Start the next run
+        if: always()
+        run: gh workflow run scan.yml --ref main
 
       - uses: actions/upload-artifact@v4
         if: always()

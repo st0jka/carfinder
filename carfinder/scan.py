@@ -46,8 +46,7 @@ HAIKU_WORKERS = 4
 DETAIL_MARGIN_EUR = 1000   # fetch the detail page when the rough profit is within this of the target
 EMPTY_SITE_MODELS = 5      # a site with no car for this many models in one run has changed, not run dry
 LOCK = Path(db.DB_PATH).parent / "scan.lock"
-SCAN_EVERY_H = 3           # .github/workflows/scan.yml starts a run every 3 hours (UTC hours)
-DAILY_GROUPS = 24 // SCAN_EVERY_H
+DAILY_GROUPS = 8           # each run takes the next eighth of the daily models, whenever GitHub starts it
 
 log = logging.getLogger("carfinder")
 
@@ -454,10 +453,10 @@ def acquire_lock():
     return handle
 
 
-def models_of_run(hour):
-    """The core models every run, plus the daily models' group of this hour, so each daily model is read once a day.
-    shortcut: a run that does not start (GitHub late, the last run still going) skips its group until the next day."""
-    group = hour // SCAN_EVERY_H
+def models_of_run(run_number):
+    """The core models every run, plus the next group of daily models in turn, so a late or skipped run never
+    skips a group: eight runs read every daily model once."""
+    group = run_number % DAILY_GROUPS
     return models.CORE_MODELS + models.DAILY_MODELS[group::DAILY_GROUPS]
 
 
@@ -477,7 +476,7 @@ def main(only=None):
     if only:
         scan_models = [model for model in models.MODELS if only.lower() in model["as24"]]
     else:
-        scan_models = models_of_run(datetime.now().hour)
+        scan_models = models_of_run(db.run_count(conn))
     try:
         all_models = not only
         run(conn, scan_models, db.overrides(conn), errors, blocked_sites, all_models)

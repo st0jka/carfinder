@@ -160,5 +160,9 @@ def store_run(conn, source, model_key, cars):
     conn.commit()
 
 
+def run_count(conn):
+    return conn.execute("SELECT COUNT(*) FROM runs").fetchone()[0]
+
+
 def last_runs(conn, limit=5):
     return [dict(r) for r in conn.execute("SELECT * FROM runs ORDER BY started DESC LIMIT ?", (limit,))]
