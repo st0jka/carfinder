@@ -77,6 +77,9 @@ def test_novkys_automatics_buyers_avoid(make, gearbox, avoided):   # Novky 25.11
     ("Peugeot", "3008 automatisiertes Schaltgetriebe", True),
     ("Peugeot", "3008 Halbautomatik", True),
     ("Citroen", "C4 1.6 HDi EGS6", True),
+    ("Peugeot", "508 1,6 e-HDI Active ASG6", True),  # cloud copy 26.11: passed, ASG is the German for a robot
+    ("Citroen", "C3 1.4 SensoDrive", True),
+    ("Citroën", "C4 Picasso e-HDi 115 ETG6", True),
     ("Peugeot", "3008 1.2 PureTech EAT6", False),   # torque converter: "samo sa automatskim menjacem"
     ("Peugeot", "3008 2.0 BlueHDi EAT8", False),
     ("Peugeot", "3008 2.0 HDi Automatik", False),
@@ -86,6 +89,57 @@ def test_peugeot_and_citroen_robot_gearbox_is_dropped_a_converter_stays(make, wo
     car = {"make": make, "model": "x", "gearbox": "automatic", "fuel": "diesel", "title": words, "text": ""}
     assert market.avoided(car) is avoided
     assert not market.avoided(dict(car, gearbox="manual"))   # a robot word on a manual car drops nothing
+
+
+@pytest.mark.parametrize("make,fuel,kw,year,avoided", [
+    ("Peugeot", "diesel", 82, 2011, True),     # 508 1.6 e-HDi 112: ETG6/EGS6 only
+    ("Peugeot", "diesel", 80, 2010, True),     # 3008 1.6 HDi 110: BMP6
+    ("Peugeot", "diesel", 50, 2013, True),     # 208 1.4 e-HDi 68: ETG5
+    ("Citroën", "diesel", 85, 2017, True),     # C4 Picasso e-HDi 115: ETG6
+    ("Citroen", "diesel", 68, 2014, True),     # C4 Picasso e-HDi 90: ETG6
+    ("Peugeot", "diesel", 88, 2016, False),    # 1.6 BlueHDi 120 EAT6: torque converter
+    ("Citroën", "diesel", 96, 2019, False),    # 1.5 BlueHDi 130 EAT8
+    ("Peugeot", "diesel", 120, 2012, False),   # 2.0 HDi 163: Aisin AT6
+    ("Peugeot", "petrol", 60, 2015, True),     # 208 1.2 PureTech 82: ETG5
+    ("Peugeot", "petrol", 61, 2016, True),
+    ("Peugeot", "petrol", 74, 2021, False),    # PureTech 100 EAT8
+    ("Peugeot", "petrol", 81, 2019, False),    # PureTech 110 EAT6
+    ("Peugeot", "hybrid", 147, 2013, True),    # 3008 HYbrid4: ETG6
+    ("Citroën", "hybrid", 120, 2016, True),    # DS5 Hybrid4: EGS6
+    ("Peugeot", "hybrid", 120, 2018, True),
+    ("Peugeot", "hybrid", 165, 2020, False),   # plug-in hybrid: e-EAT8
+    ("Peugeot", "hybrid", 133, 2019, False),
+    ("Peugeot", "diesel", None, 2011, False),  # kW unknown: an unknown never drops a car
+    ("Peugeot", "hybrid", 147, None, False),   # year unknown
+    ("Volkswagen", "diesel", 77, 2012, False),  # only PSA's small engines had only a robot
+    ("Opel", "diesel", 81, 2012, True),         # Opel automatic is dropped anyway (Novky 25.11)
+])
+def test_psa_robot_is_known_from_the_engine_when_the_ad_names_no_gearbox(make, fuel, kw, year, avoided):
+    car = {"make": make, "model": "x", "gearbox": "automatic", "fuel": fuel, "kw": kw, "year": year,
+           "title": f"{make} x", "text": ""}
+    assert market.avoided(car) is avoided
+    if make != "Opel":
+        assert not market.avoided(dict(car, gearbox="manual"))   # the same engine with a manual stays
+
+
+def test_508_e_hdi_automatic_that_passed_on_the_cloud_copy_is_dropped():   # 26.11.2026
+    named = {"make": "Peugeot", "model": "508", "gearbox": "automatic", "fuel": "diesel", "kw": 82, "year": 2011,
+             "title": "Peugeot 508 1,6 e-HDI Active ASG6", "text": ""}
+    unnamed = dict(named, title="Peugeot 508 SW HDI Aut Exclusive")   # neither the gearbox nor e-HDi named
+    assert market.avoided(named)
+    assert market.avoided(unnamed)
+    assert not scan.usable(foreign(**named))
+    assert scan.usable(foreign(**dict(named, gearbox="manual")))   # the scan drops it for the gearbox alone
+    assert not market.avoided(dict(unnamed, kw=120))   # the 2.0 HDi 163 automatic is a torque converter
+
+
+def test_hybrid4_filed_as_diesel_is_dropped_a_plug_in_stays():   # cloud copy 26.11.2026: passed
+    car = {"make": "Peugeot", "model": "3008", "gearbox": "automatic", "fuel": "diesel", "kw": 120, "year": 2013,
+           "title": "Peugeot 3008 Hybrid4 Automatik", "text": ""}
+    assert market.avoided(car)
+    assert not market.avoided(dict(car, year=2020, kw=220))   # Hybrid4 300 e-EAT8: torque converter
+    assert not market.avoided(dict(car, title="Peugeot 3008 Automatik"))   # 2.0 HDi, no hybrid word
+    assert not market.avoided(dict(car, gearbox="manual"))
 
 
 def test_robot_words_are_read_from_the_description_too():

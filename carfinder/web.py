@@ -25,6 +25,9 @@ FRESH_S = 2 * 24 * 3600   # cars not seen for two days are probably sold
 MAX_CARDS = 300
 VERDICTS = ("uzeo bih", "onako", "ne")   # Novky's word on a car, as Bane types it in
 VERDICT_NOTE_CHARS = 80
+# shortcut: 5% set from the cloud copy of 26.11.2026 (a repost or the other site within it), not tuned further;
+# raise it when Bane still sees one car twice.
+SAME_CAR_PRICE_SHARE = 0.05
 SPEED_ORDER = {"brzo": 0, "sporo": 2}   # a passing car that sells fast comes first; normal and unknown sit between
 PAGE = Environment(loader=FileSystemLoader(Path(__file__).parent / "templates"), autoescape=True).get_template("page.html")
 
@@ -91,18 +94,43 @@ def verdict_record(conn, car_id, override):
                        "speed": result["serbia"].get("speed")})
 
 
+def same_car(a, b):
+    """Two ads of one model, year and gearbox with the same km reading are one car when the place or the reading
+    itself says so.
+
+    The same dealer (postcode or city) with an exact reading (not a multiple of 500 km) is one car at any asking
+    price: sites and reposts ask differently. A rounded reading (190,000 or 172,500) at the same dealer, or an exact
+    one from another place (a dealer's other branch), also needs a near-equal price. A rounded reading from another
+    place says too little."""
+    if abs((a.get("kw") or 0) - (b.get("kw") or 0)) > 1:
+        return False   # 1 kW apart is the same engine: the sites round PS to kW differently
+    same_zip = bool(a.get("zip")) and a.get("zip") == b.get("zip")
+    same_city = bool(a.get("city")) and (a.get("city") or "").lower() == (b.get("city") or "").lower()
+    same_place = same_zip or same_city
+    exact_km = a["km"] % 500 != 0
+    near_price = abs(a["price"] - b["price"]) <= SAME_CAR_PRICE_SHARE * min(a["price"], b["price"])
+    if same_place and exact_km:
+        return True
+    if same_place or exact_km:
+        return near_price
+    return False
+
+
 def without_duplicates(cars):
-    """Dealers often post the same car twice (or on both sites): same year, km, price and city."""
-    seen, unique = set(), []
+    """Dealers often post the same car twice or on two sites, where the city is spelled differently and the price
+    can differ. The first card of a car stays: on the profit sort the cheaper ad."""
+    kept, unique = {}, []
     for entry in cars:
         data = entry["data"]
-        if not data.get("km") or not data.get("city"):
+        if not data.get("km") or not data.get("price"):
             unique.append(entry)   # too little to tell two ads apart safely
             continue
-        key = (entry["model_key"], data["country"], data["year"], data["km"], data["price"], data["city"].lower())
-        if key not in seen:
-            seen.add(key)
-            unique.append(entry)
+        reading = (entry["model_key"], data["country"], data["year"], data.get("gearbox"), data["km"])
+        same_reading = kept.setdefault(reading, [])
+        if any(same_car(data, other) for other in same_reading):
+            continue
+        same_reading.append(data)
+        unique.append(entry)
     return unique
 
 

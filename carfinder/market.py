@@ -11,9 +11,14 @@ from datetime import datetime
 from carfinder import polovni
 
 AVOID, NOTE = "izbaci", "napomena"
+PSA = ("peugeot", "citro")
+# Robot gearboxes by PSA's and the sites' names: ASG and "automatisiert" are the German for any robot.
+PSA_ROBOT = re.compile(r"\b(?:etg ?\d?|egs ?\d?|bmp ?\d?|asg ?\d?|2-?tronic|sensodrive)\b|halbautomati|automatisiert",
+                       re.I)
 
 # A key a row leaves out matches any car. A key the row sets and the car lacks (no gearbox on a list page) is no
-# match, so an unknown never drops a car. "make" is the lower-case start of the site's own make name.
+# match, so an unknown never drops a car. "make" is the lower-case start (or starts) of the site's own make name;
+# "kw_max" and "year_to" are the highest kW and year the row matches.
 REPUTATION = [
     # Novky 24.11.2026 "Ford automatik losi" (PowerShift). PA 24.11: a Kuga II automatic asks 0.99 of the same
     # manual (VW automatics 1.03-1.10), 13% of them have a cut price against 2% of manuals, and 6 of the 8 Kugas
@@ -25,14 +30,22 @@ REPUTATION = [
     {"make": "renault", "gearbox": "automatic", "effect": AVOID},
     {"make": "hyundai", "gearbox": "automatic", "effect": AVOID},
     {"make": "kia", "gearbox": "automatic", "effect": AVOID},
-    # Novky 25.11: Peugeot "samo sa automatskim menjacem nikako robot". The sites file a robot (ETG, EGS, BMP, 2-Tronic)
-    # under automatic like a torque converter (AT6, EAT6, EAT8), so only the ad's own words tell them apart.
-    {"make": "peugeot", "gearbox": "automatic", "words": re.compile(r"\b(?:etg ?\d?|egs ?\d?|bmp ?\d?|2-?tronic)\b|"
-                                                                    r"halbautomati|automatisiert", re.I),
-     "effect": AVOID},
-    {"make": "citro", "gearbox": "automatic", "words": re.compile(r"\b(?:etg ?\d?|egs ?\d?|bmp ?\d?)\b|"
-                                                                  r"halbautomati|automatisiert", re.I),
-     "effect": AVOID},
+    # Novky 25.11: Peugeot "samo sa automatskim menjacem nikako robot" (Citroen shares the gearboxes). The sites file
+    # a robot under automatic like a torque converter (AT6, EAT6, EAT8), so the ad's own words tell them apart...
+    {"make": PSA, "gearbox": "automatic", "words": PSA_ROBOT, "effect": AVOID},
+    # ...and so does the engine, which most ads name without the gearbox ("Peugeot 508 SW HDI Aut", 82 kW).
+    # PSA gave its 1.4 and 1.6 HDi (up to the e-HDi 115, 85 kW) only a robot: BMP6, ETG6/EGS6, ETG5. Its first small
+    # diesel converter was the 1.6 BlueHDi 120 EAT6 (88 kW, 2014); the 2.0 HDi had the Aisin AT6. Cloud copy 26.11,
+    # 633 PSA diesel automatics: one converter word at 85 kW or less, a BlueHDi 150 EAT6 filed at 85 kW.
+    {"make": PSA, "gearbox": "automatic", "fuel": "diesel", "kw_max": 85, "effect": AVOID},
+    # The 1.0 and 1.2 VTi/PureTech up to 82 PS (61 kW) came only with the ETG5 robot; the smallest converter petrol is
+    # the PureTech 100 EAT8 (74 kW).
+    {"make": PSA, "gearbox": "automatic", "fuel": "petrol", "kw_max": 61, "effect": AVOID},
+    # HYbrid4 (2.0 HDi diesel hybrid, 3008, 508 RXH, DS5, 2011-2018) came only with the ETG6/EGS6 robot; the plug-ins
+    # from 2019 have the e-EAT8 converter.
+    {"make": PSA, "gearbox": "automatic", "fuel": "hybrid", "year_to": 2018, "effect": AVOID},
+    # Some sites file a HYbrid4 as diesel (cloud copy 26.11: "3008 Hybrid Hybrid4 AUTOMATIK", 120 kW, 2013).
+    {"make": PSA, "gearbox": "automatic", "words": re.compile(r"hybrid", re.I), "year_to": 2018, "effect": AVOID},
     # Novky 24.11: Passat B6 1.4 TSI CNG "5000 max da ga prodas"; 25.11 on factory CNG: "Vise ne".
     {"fuel": "petrol_cng", "effect": AVOID},
 ]
@@ -51,6 +64,10 @@ def matches(row, car):
     for key in ("gearbox", "fuel"):
         if key in row and car.get(key) != row[key]:
             return False
+    if "kw_max" in row and not (car.get("kw") and car["kw"] <= row["kw_max"]):
+        return False
+    if "year_to" in row and not (car.get("year") and car["year"] <= row["year_to"]):
+        return False
     if "words" in row and not row["words"].search(f"{car.get('title') or ''} {car.get('text') or ''}"):
         return False
     return True

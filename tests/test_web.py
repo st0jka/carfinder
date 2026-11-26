@@ -91,6 +91,65 @@ def test_dedupe_keeps_different_models_and_cars_without_km(client):
     assert len(w.without_duplicates([a, b, c, dict(c)])) == 4
 
 
+def listed(**overrides):
+    """One priced car as without_duplicates gets it."""
+    return {"model_key": "audi/a6", "data": foreign(**overrides)}
+
+
+def test_same_car_on_mobilede_and_autoscout24_is_one_card():   # A6 Avant 2013 on the cloud copy, 26.11.2026
+    mobilede = listed(id="mobilede:49752355662336", source="mobilede", country="DE", year=2013, km=261417, kw=130,
+                    gearbox="automatic", price=4699, zip="06796", city="Brehna")
+    as24 = dict(mobilede, data=dict(mobilede["data"], id="as24:643cc0e8", source="autoscout24",
+                                    city="Sandersdorf-Brehna"))
+    assert web.without_duplicates([mobilede, as24]) == [mobilede]
+
+
+@pytest.mark.parametrize("second,one_card", [
+    ({"price": 4900}, True),                         # same dealer, exact reading: one car at any asking price
+    ({"price": 4900, "zip": "1010"}, True),          # same city, other postcode (another site's dealer address)
+    ({"kw": 82}, True),                              # sites round PS to kW differently
+    ({"zip": "4020", "city": "Linz"}, True),         # exact reading, another branch, the same price
+    ({"zip": "4020", "city": "Linz", "price": 4150}, True),
+    ({"zip": "4020", "city": "Linz", "price": 4900}, False),   # another place and another price: another car
+    ({"kw": 85}, False),                             # another engine
+    ({"gearbox": "automatic"}, False),
+    ({"year": 2016}, False),
+    ({"km": 150001}, False),
+])
+def test_same_car_is_known_from_km_place_price_and_engine(second, one_card):
+    first = listed(km=150123, kw=81, price=4000)
+    other = listed(id="willhaben:2", source="willhaben", km=150123, kw=81, price=4000)
+    other["data"].update(second)
+    assert len(web.without_duplicates([first, other])) == (1 if one_card else 2)
+
+
+@pytest.mark.parametrize("second,one_card", [
+    ({}, True),                                      # same dealer, same price: a repost
+    ({"price": 4150}, True),                         # same dealer, near price
+    ({"price": 4900}, False),                        # same dealer, another price: a rounded reading says too little
+    ({"zip": "4020", "city": "Linz"}, False),        # another place, same price: two cars with 190,000 km
+    ({"km": 172500, "zip": "4020", "city": "Linz"}, False),   # half-thousand readings are rounded too
+])
+def test_a_rounded_km_reading_needs_the_same_dealer_and_a_near_price(second, one_card):
+    first = listed(km=190000, price=4000)
+    other = listed(id="willhaben:2", source="willhaben", km=190000, price=4000)
+    other["data"].update(second)
+    if "km" in second:
+        first["data"]["km"] = second["km"]
+    assert len(web.without_duplicates([first, other])) == (1 if one_card else 2)
+
+
+def test_the_first_card_of_a_car_stays_so_the_cheaper_ad_shows_on_the_profit_sort():
+    cheap = listed(id="as24:cheap", km=207932, price=3499, zip="06796", city="Sandersdorf-Brehna")
+    dear = listed(id="mobilede:dear", source="mobilede", km=207932, price=3999, zip="06796", city="Brehna")
+    assert web.without_duplicates([cheap, dear]) == [cheap]
+
+
+def test_ad_without_a_price_is_never_merged():
+    first = listed(price=None)
+    assert len(web.without_duplicates([first, listed(price=None)])) == 2
+
+
 def test_backslash_redirect_is_rejected(client):
     response = client.post("/override", data={"car_id": "x", "back": r"/\evil.example"}, follow_redirects=False)
     assert response.headers["location"] == "/"
