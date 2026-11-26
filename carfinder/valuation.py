@@ -127,7 +127,6 @@ def year_window(model, year, generation=None):
         if generation is None:
             return year, year
     first, last = generation["years"]
-    last = generation.get("named_until", last)
     year_from = max(first, year - 1)
     # The previous generation anchored 17 of 47 2017 Tiguans through the mixed 2016 listings.
     # The two Insignias can use explicitly named 2017 ads on either side of the change-over.
@@ -241,18 +240,15 @@ def transport_of(car, settings, model):
 
 
 def generation_of(car, model):
-    """Use an explicit generation in a change-over year or when first registration ran late."""
-    named = models.named_generation(model, car.get("title"))
-    if named:
-        for generation in model["generations"]:
-            first, last = generation["years"]
-            if generation["name"] == named and first <= car["year"] <= generation.get("named_until", last):
-                return generation
-        return None
+    """The generation the title or AutoScout24 names when its years allow it, None when they do not. Without a
+    name, a change-over year gives the older generation: Ogi 26.11.2026, a 5k older BMW was priced as our 10k one."""
+    named = models.named_generation(model, car.get("title")) or models.as24_generation(model, car.get("url"))
     generations = models.generations_for(model, car["year"])
-    if len(generations) != 1:
+    if named:
+        generations = [generation for generation in generations if generation["name"] == named]
+    if not generations:
         return None
-    return generations[0]
+    return generations[0]   # the table lists every model's generations oldest first
 
 
 def fuel_sells(car, model):

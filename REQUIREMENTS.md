@@ -77,6 +77,9 @@ who checks the tool's output; his figures are ground truth.
   Novky's own figures (B klasa, Passat CNG, Golf 6 GTD sold 12-17% under the cheapest ask); the 9% cut stays until
   Bane decides.
 - A title that names another generation than the year implies (B6 sold as 2011) is not priced against the wrong one.
+- Ogi 26.11 (a working importer): "gleda po modelu i restajlingu... Na prelazne godine masi mnogo", an older BMW
+  worth 5k was valued at the newer one's 10k. A car is priced only on ads of its own generation and its own side of a
+  facelift; in a change-over year that neither the title nor AutoScout24 settles, it counts as the older, cheaper one.
 
 ## 5. Costs: there are exactly two, "dovoz" and "carina"
 - "kad kazem carina... to se misli na ceo trosak koji trazi carinska firma da se resi sve. troskova su 2 - dovoz i

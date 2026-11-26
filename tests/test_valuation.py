@@ -166,16 +166,22 @@ def test_unknown_mileage_has_no_adjustment():
 
 @pytest.mark.parametrize("year,expected", [
     (2015, (2014, 2016)),   # Golf 7 only
-    (2012, (2012, 2012)),   # Golf 6 / Golf 7 change-over year
-    (2020, (2020, 2020)),   # Golf 7 / Golf 8 change-over year
+    (2012, (2011, 2013)),   # Golf 6 / Golf 7 change-over year: without a name the older Golf 6 (to 2013)
+    (2020, (2019, 2020)),   # Golf 7 / Golf 8 change-over year: without a name the older Golf 7
     (2024, (2023, 2024)),   # last Golf 8 year: window capped at the generation end
 ])
 def test_year_window(year, expected):
     assert valuation.year_window(GOLF, year) == expected
 
 
+def test_year_window_of_the_newer_generation_in_a_changeover_year():
+    assert valuation.year_window(GOLF, 2012, GOLF["generations"][1]) == (2012, 2013)
+    assert valuation.year_window(GOLF, 2020, GOLF["generations"][2]) == (2020, 2021)
+
+
 def test_year_window_tiguan_changeover():
-    assert valuation.year_window(TIGUAN, 2016) == (2016, 2016)
+    assert valuation.year_window(TIGUAN, 2016) == (2015, 2016)   # without a name the older Tiguan I
+    assert valuation.year_window(TIGUAN, 2016, TIGUAN["generations"][1]) == (2016, 2017)
     assert valuation.year_window(TIGUAN, 2014) == (2013, 2015)
 
 
@@ -415,7 +421,7 @@ def test_every_generation_has_its_new_price(model_index, year, new_price):
 
 
 def test_unknown_generation_falls_back_on_the_invoice_bill():
-    car = foreign(year=2012)       # Golf 6 and Golf 7 share 2012: the generation cannot be told
+    car = foreign(year=2014, title="VW Golf VI")   # the title names a Golf 6, which ends in 2013
     cost = valuation.costs(car, 4000, {}, GOLF, DEC_2026)
     assert valuation.new_price_of(car, GOLF) is None
     assert cost["import"] == customs.import_bill(4000 + 500, 1350, 0.0, DEC_2026)
@@ -722,11 +728,13 @@ def test_expert_octavia_2017_manual_estate_is_no_deal_at_5700():
     car, snapshots = expert_case("octavia_2017_manual_estate", OCTAVIA)
     result = valuation.evaluate(car, scan.comparables_for(snapshots, car, OCTAVIA), {}, OCTAVIA, DEC_2026)
     serbia = result["serbia"]
-    assert (serbia["first"]["price"], serbia["first"]["adjusted"], serbia["first"]["year"]) == (9450, 8788, 2018)
-    assert (serbia["next"][0]["price"], serbia["next"][0]["adjusted"], serbia["next"][0]["year"]) == (9299, 9950, 2016)
-    assert serbia["anchor"] == 8788 and serbia["n"] == 9     # 9450 x 0.93 = 8788.5, just under in floating point
-    assert serbia["price"] == 7997
-    assert result["profit"] == 7997 - result["cost"]["cash"]
+    assert (serbia["first"]["price"], serbia["first"]["adjusted"], serbia["first"]["year"]) == (9299, 9950, 2016)
+    assert (serbia["next"][0]["price"], serbia["next"][0]["adjusted"], serbia["next"][0]["year"]) == (9300, 9951, 2016)
+    assert serbia["anchor"] == 9950 and serbia["n"] == 7     # 9299 x 1.07 = 9949.9
+    # the facelift came in 2017: a 2017 car that does not say so is priced without the 2018 facelift ads (9,450 ...)
+    assert {ad["year"] for ad in scan.comparables_for(snapshots, car, OCTAVIA)} == {2016, 2017}
+    assert serbia["price"] == 9054
+    assert result["profit"] == 9054 - result["cost"]["cash"]
     assert result["profit"] < result["target"]
     assert result["passes"] is False
 
@@ -752,6 +760,8 @@ def test_expert_octavia_2015_dsg_estate_at_2790_drops_the_newer_4900_ad_as_bait_
     assert other["serbia"]["skipped_bait"] == 0 and other["serbia"]["n"] == 11
     assert other["serbia"]["anchor"] == 6500 and other["serbia"]["price"] == 5915
     assert other["passes"] is True
+    # the facelift came in 2017: every 2016 ad is from before it, so a 2015 car keeps them
+    assert {ad["year"] for ad in matched} == {2014, 2015, 2016}
 
 
 # --- a damaged car is judged by what Haiku reads, not blocked wholesale (Bane 24.11.2026) ---------
@@ -832,10 +842,13 @@ def test_novkys_passat_b6_and_golf_6_gtd_use_their_own_ads_and_sell_near_5000(mo
     matched = [ad for ad in b7_ads if valuation.is_match(passat, ad)]
     assert len(matched) == 5
     unnamed = dict(passat, title="Volkswagen Passat 1.4 TSI EcoFuel Comfortline")
-    b7_snapshot = scan.snapshot_for(dict(unnamed, text=""), PASSAT)
+    # without a name a 2011 Passat is a B6 too (Ogi 26.11.2026); AutoScout24's own B7 id makes it a B7
+    assert scan.snapshot_for(dict(unnamed, text=""), PASSAT) == ("Volkswagen", "Passat B6", 2009, 2011, "petrol_cng")
+    b7_car = dict(unnamed, url="https://www.autoscout24.de/angebote/vw-passat-cat_ma74gr100039ge216va1-1")
+    b7_snapshot = scan.snapshot_for(dict(b7_car, text=""), PASSAT)
     snapshots = {b7_snapshot: b7_ads}
     assert scan.comparables_for(snapshots, passat, PASSAT) == []
-    assert len(scan.comparables_for(snapshots, unnamed, PASSAT)) == 5
+    assert len(scan.comparables_for(snapshots, b7_car, PASSAT)) == 5
     b6_snapshot = scan.snapshot_for(dict(passat, text=""), PASSAT)
     assert b6_snapshot == ("Volkswagen", "Passat B6", 2009, 2011, "petrol_cng")
     assert valuation.evaluate(passat, scan.comparables_for(snapshots, passat, PASSAT), {}, PASSAT, DEC_2026) is None
@@ -937,3 +950,114 @@ def test_warnings_are_plain_serbian():
         "nismo otvorili oglas, opis i slike nisu pregledani",
     ]
     assert valuation.PHOTOS_UNREAD_FLAG == "slike nisu pregledane, pogledaj ih u oglasu"
+
+
+# --- 26.11.2026, Ogi: an older generation and the side before a facelift are priced on their own ads -------------
+
+X3 = next(model for model in models.MODELS if model["as24"] == "bmw/x3")
+
+
+def x3_ad(price, year, title="BMW X3 xDrive18d"):
+    return comp(price, year=year, model="X3", title=title, tags=[], cc=1995, kw=105, body="suv", drive="4x4")
+
+
+# The xDrive18d has 105 kW in both generations, so only the generation keeps the ads apart.
+X3_ADS = [x3_ad(5500, 2009), x3_ad(5800, 2009), x3_ad(6000, 2009),
+          x3_ad(6300, 2010, "BMW X3 E83 xDrive18d"), x3_ad(9900, 2010, "BMW X3 F25 xDrive18d"),
+          x3_ad(9800, 2010),                                        # 2010 without a code: E83 or F25
+          x3_ad(10000, 2011), x3_ad(10500, 2011), x3_ad(11000, 2011)]
+
+
+def x3(year):
+    return foreign(make="BMW", model="X3", year=year, cc=1995, kw=105, body="suv", drive="4x4",
+                   title="BMW X3 xDrive18d", url="u")
+
+
+def test_ogis_older_x3_e83_of_2010_is_priced_on_e83_ads_not_as_the_newer_f25():
+    """Ogi 26.11.2026: "kad bi nam naso onog bmwa sto je stariji model od naseg, onaj do 2010 ... taj bmw tipa 5k
+    eura a nas 10k, i ovaj ga upise u 10k value". The table had only the F25 from 2010; most 2010 X3 are E83."""
+    car = x3(2010)
+    generation = valuation.generation_of(car, X3)
+    assert generation["name"] == "X3 E83"
+    snapshot = scan.snapshot_of(X3, generation, "diesel")
+    assert snapshot == ("BMW", "X3", 2009, 2010, "diesel")
+    matched = scan.comparables_for({snapshot: X3_ADS}, car, X3)
+    assert sorted(ad["price"] for ad in matched) == [5500, 5800, 6000, 6300]
+    serbia = valuation.serbian_price(car, matched)
+    assert serbia["anchor"] == 5885 and serbia["price"] == 5355   # 5,500 of 2009 raised 7%, then the 9% cut
+    assert valuation.new_price_of(car, X3) == 34000               # the carina of an E83, not of an F25
+
+
+def test_x3_f25_of_2011_leaves_out_the_2010_ads_that_mix_both_generations():
+    car = x3(2011)
+    generation = valuation.generation_of(car, X3)
+    assert generation["name"] == "X3 F25"
+    assert valuation.year_window(X3, 2011, generation) == (2011, 2012)
+    matched = scan.comparables_for({scan.snapshot_of(X3, generation, "diesel"): X3_ADS}, car, X3)
+    assert sorted(ad["price"] for ad in matched) == [10000, 10500, 11000]
+
+
+def test_x3_f25_of_2010_named_in_the_title_uses_only_named_f25_ads_of_2010():
+    car = dict(x3(2010), title="BMW X3 F25 xDrive18d")
+    generation = valuation.generation_of(car, X3)
+    matched = scan.comparables_for({scan.snapshot_of(X3, generation, "diesel"): X3_ADS}, car, X3)
+    assert sorted(ad["price"] for ad in matched) == [9900, 10000, 10500, 11000]
+
+
+def golf7_ad(price, year, title="Volkswagen Golf 7 2.0 TDI"):
+    return comp(price, year=year, model="Golf 7", title=title, tags=[], cc=1968, kw=110)
+
+
+# The Golf 7.5 was registered from 2017 (PA: no 2016 Golf 7 ad says 7.5). The 2.0 TDI kept its 110 kW, so only the
+# facelift keeps these ads apart.
+GOLF7_ADS = [golf7_ad(7500, 2016, "Volkswagen Golf 7.5 look 2.0 TDI"),   # a look-alike: a 2016 car is no 7.5
+             golf7_ad(8000, 2016), golf7_ad(8300, 2017), golf7_ad(9600, 2017, "Volkswagen Golf 7.5 2.0 TDI"),
+             golf7_ad(10000, 2018), golf7_ad(10400, 2019)]
+
+
+@pytest.mark.parametrize("year,title,prices", [
+    (2016, "VW Golf 2.0 TDI", [7500, 8000, 8300]),      # before: the unsaid 2017 ad stays, its cheapest decides
+    (2016, "VW Golf 7.5 Look 2.0 TDI", [7500, 8000, 8300]),   # a facelift word before the facelift is a look-alike
+    (2017, "VW Golf 2.0 TDI", [7500, 8000, 8300]),      # the facelift year without a word: the older, cheaper side
+    (2017, "VW Golf 7.5 2.0 TDI", [9600, 10000]),        # the facelift year, named: the 7.5 ads only
+    (2018, "VW Golf 2.0 TDI", [9600, 10000, 10400]),     # after: the unsaid 2017 ad may be from before the facelift
+])
+def test_golf_7_is_priced_on_ads_from_its_own_side_of_the_facelift(year, title, prices):
+    car = foreign(year=year, title=title, cc=1968, kw=110)
+    snapshot = scan.snapshot_of(GOLF, GOLF["generations"][1], "diesel")
+    matched = scan.comparables_for({snapshot: GOLF7_ADS}, car, GOLF)
+    assert sorted(ad["price"] for ad in matched) == prices
+
+
+def test_golf_7_5_look_of_2016_is_not_priced_at_facelift_money():
+    """Review 26.11.2026: a 2016 Golf titled "7.5 Look" was matched with the real 7.5 ads and priced too high."""
+    snapshot = scan.snapshot_of(GOLF, GOLF["generations"][1], "diesel")
+    plain = foreign(year=2016, title="VW Golf 2.0 TDI", cc=1968, kw=110)
+    look = dict(plain, title="VW Golf 7.5 Look 2.0 TDI")
+    look_ads = scan.comparables_for({snapshot: GOLF7_ADS}, look, GOLF)
+    assert sorted(ad["price"] for ad in look_ads) == [7500, 8000, 8300]   # not the 9,600 and 10,000 of the real 7.5
+    assert valuation.serbian_price(look, look_ads)["price"] == 6825      # 7,500 less the 9% sale cut
+    plain_ads = scan.comparables_for({snapshot: GOLF7_ADS}, plain, GOLF)
+    assert valuation.serbian_price(plain, plain_ads)["price"] == 6825
+
+
+def test_speed_of_an_x3_e83_is_read_without_the_f25_and_unnamed_2010_ads():
+    car = x3(2010)
+    generation = valuation.generation_of(car, X3)
+    ads = scan.speed_ads({scan.snapshot_of(X3, generation, "diesel"): X3_ADS}, car, X3)
+    assert sorted(ad["price"] for ad in ads) == [5500, 5800, 6000, 6300]
+
+
+def test_speed_of_a_golf_7_5_is_read_from_facelift_ads_only():
+    car = foreign(year=2018, title="VW Golf 2.0 TDI", cc=1968, kw=110)
+    snapshot = scan.snapshot_of(GOLF, GOLF["generations"][1], "diesel")
+    assert sorted(ad["price"] for ad in scan.speed_ads({snapshot: GOLF7_ADS}, car, GOLF)) == [9600, 10000, 10400]
+
+
+def test_generation_without_a_facelift_keeps_every_ad_of_its_years():
+    car = foreign(model="Tiguan", year=2012, cc=1968, kw=103, body="suv", title="VW Tiguan 2.0 TDI")
+    ads = [comp(price, year=year, model="Tiguan", title=title, tags=[], cc=1968, kw=103, body="suv")
+           for price, year, title in ((9000, 2011, "VW Tiguan"), (9500, 2012, "VW Tiguan Facelift"),
+                                      (9900, 2013, "VW Tiguan"))]
+    snapshot = scan.snapshot_of(TIGUAN, TIGUAN["generations"][0], "diesel")
+    assert [ad["price"] for ad in scan.comparables_for({snapshot: ads}, car, TIGUAN)] == [9000, 9500, 9900]

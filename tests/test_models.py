@@ -66,11 +66,13 @@ def test_base_model_and_trims_are_no_sub_model(title):
 
 # --- Passat B7 ------------------------------------------------------------------------
 
-def test_passat_b7_starts_in_2011():
+def test_passat_b7_starts_in_2011_while_the_b6_was_still_registered():
     assert [g["name"] for g in models.generations_for(PASSAT, 2010)] == ["Passat B6"]
-    assert [g["name"] for g in models.generations_for(PASSAT, 2011)] == ["Passat B7"]
+    assert [g["name"] for g in models.generations_for(PASSAT, 2011)] == ["Passat B6", "Passat B7"]
     assert [g["name"] for g in models.generations_for(PASSAT, 2013)] == ["Passat B7"]
-    assert valuation.year_window(PASSAT, 2011) == (2011, 2012)   # never compared with 2010 ads
+    b7 = PASSAT["generations"][1]
+    assert valuation.year_window(PASSAT, 2011, b7) == (2011, 2012)   # a B7 is never compared with 2010 ads
+    assert valuation.year_window(PASSAT, 2011) == (2010, 2011)       # an unnamed 2011 Passat is a B6
 
 
 # --- a generation the seller names in the title (Novky 24.11.2026) -----------------------
@@ -138,19 +140,21 @@ def test_generations_of_one_model_overlap_only_in_their_change_over_years():
 @pytest.mark.parametrize("as24,year,names", [
     ("bmw/x1", 2010, ["X1 E84"]), ("bmw/x1", 2015, ["X1 E84", "X1 F48"]), ("bmw/x1", 2016, ["X1 F48"]),
     ("bmw/x1", 2022, ["X1 F48"]), ("bmw/x1", 2023, []),
-    ("bmw/520", 2010, ["520d F10"]), ("bmw/520", 2016, ["520d F10"]), ("bmw/520", 2017, ["520d G30"]),
+    ("bmw/520", 2010, ["520d E60", "520d F10"]), ("bmw/520", 2016, ["520d F10"]),
+    ("bmw/520", 2017, ["520d F10", "520d G30"]),
     ("bmw/520", 2023, ["520d G30"]), ("bmw/520", 2024, []),
     ("bmw/3er", 2011, ["3er E90"]), ("bmw/3er", 2012, []), ("bmw/3er", 2013, ["3er F30"]),
-    ("bmw/3er", 2018, ["3er F30"]), ("bmw/3er", 2019, ["3er G20"]),
+    ("bmw/3er", 2018, ["3er F30"]), ("bmw/3er", 2019, ["3er F30", "3er G20"]), ("bmw/3er", 2020, ["3er G20"]),
     ("audi/a6", 2010, ["A6 C6"]), ("audi/a6", 2011, ["A6 C6", "A6 C7"]), ("audi/a6", 2017, ["A6 C7"]),
-    ("audi/a6", 2018, ["A6 C8"]),
+    ("audi/a6", 2018, ["A6 C7", "A6 C8"]), ("audi/a6", 2019, ["A6 C8"]),
     ("opel/insignia", 2010, ["Insignia A"]), ("opel/insignia", 2016, ["Insignia A"]),
     ("opel/insignia", 2017, ["Insignia A", "Insignia B"]), ("opel/insignia", 2022, ["Insignia B"]),
     ("opel/insignia", 2023, []),
     ("mercedes-benz/b-klasse", 2011, ["B-Klasse W245"]), ("mercedes-benz/b-klasse", 2012, ["B-Klasse W246"]),
-    ("mercedes-benz/b-klasse", 2018, ["B-Klasse W246"]), ("mercedes-benz/b-klasse", 2019, ["B-Klasse W247"]),
+    ("mercedes-benz/b-klasse", 2018, ["B-Klasse W246"]), ("mercedes-benz/b-klasse", 2019, ["B-Klasse W246", "B-Klasse W247"]),
+    ("mercedes-benz/b-klasse", 2020, ["B-Klasse W247"]),
     ("ford/kuga", 2012, ["Kuga I"]), ("ford/kuga", 2013, ["Kuga II"]), ("ford/kuga", 2019, ["Kuga II"]),
-    ("ford/kuga", 2020, ["Kuga III"]),
+    ("ford/kuga", 2020, ["Kuga II", "Kuga III"]), ("ford/kuga", 2021, ["Kuga III"]),
     ("hyundai/ix35", 2010, ["ix35 LM"]), ("hyundai/ix35", 2015, ["ix35 LM"]), ("hyundai/ix35", 2016, []),
 ])
 def test_generation_lookup_of_the_added_models(as24, year, names):
@@ -235,7 +239,9 @@ def test_new_sub_models_do_not_match_unrelated_title_text(title):
     ("bmw/x1", 2015, "BMW X1 E84 xDrive18d", "X1 E84"),
     ("bmw/x1", 2014, "BMW X1 F48 sDrive18d", None),          # the F48 was not registered in 2014
     ("bmw/x1", 2022, "BMW X1 U11 sDrive18d", None),          # a generation the table does not hold
-    ("bmw/520", 2010, "BMW 520d E60", None),
+    ("bmw/520", 2010, "BMW 520d E60", "520d E60"),
+    ("bmw/520", 2011, "BMW 520d E60", None),               # the E60 ends in 2010
+    ("bmw/520", 2010, "BMW 520 E-61", "520d E60"),         # 24.11.2026 this one was priced against F10 ads
     ("bmw/520", 2016, "BMW 520d F11 Touring", "520d F10"),
     ("bmw/520", 2016, "BMW 520d F07", "520d F10"),
     ("bmw/3er", 2013, "BMW 318d E91", None),
@@ -271,7 +277,7 @@ def test_insignia_generation_named_in_the_title(title, name):
 
 
 @pytest.mark.parametrize("year,title,name", [
-    (2017, "Opel Insignia 2.0 CDTI", None),               # change-over year without a name: not priced
+    (2017, "Opel Insignia 2.0 CDTI", "Insignia A"),       # change-over year without a name: the older one
     (2017, "Opel Insignia A 2.0 CDTI", "Insignia A"), (2017, "Opel Insignia B 2.0 CDTI", "Insignia B"),
     (2016, "Opel Insignia B 2.0 CDTI", None),             # the B was not registered in 2016
     (2018, "Opel Insignia 1.6 CDTI", "Insignia B"),
@@ -301,7 +307,8 @@ def test_a6_hybrid_has_its_own_estimated_catalogue_price():
 
 # --- 25.11.2026: BMW 1er F20, a four-week trial ------------------------------------------
 
-@pytest.mark.parametrize("year,names", [(2011, []), (2012, ["1er F20"]), (2018, ["1er F20"]), (2019, ["1er F40"])])
+@pytest.mark.parametrize("year,names", [(2011, []), (2012, ["1er F20"]), (2018, ["1er F20"]),
+                                        (2019, ["1er F20", "1er F40"]), (2020, ["1er F40"])])
 def test_1er_f20_covers_its_full_years_only(year, names):
     assert [generation["name"] for generation in models.generations_for(MODEL["bmw/1er"], year)] == names
 
@@ -338,8 +345,8 @@ DAILY_TABLE = [
     ("volkswagen/touran", (2010, 2024), [
         ("Touran I", (2010, 2015), ["Touran"], False),
         ("Touran II", (2015, 2024), ["Touran"], False)]),
-    ("volkswagen/sharan", (2010, 2022), [
-        ("Sharan II", (2010, 2022), ["Sharan"], False)]),
+    ("volkswagen/sharan", (2011, 2022), [
+        ("Sharan II", (2011, 2022), ["Sharan"], False)]),
     ("volkswagen/caddy", (2010, 2020), [
         ("Caddy III", (2010, 2015), ["Caddy"], False),
         ("Caddy IV", (2015, 2020), ["Caddy"], False)]),
@@ -349,8 +356,8 @@ DAILY_TABLE = [
         ("up! AA", (2012, 2022), ["up!"], True)]),
     ("volkswagen/cc", (2012, 2017), [
         ("CC 358", (2012, 2017), ["Passat CC"], False)]),
-    ("volkswagen/jetta", (2010, 2018), [
-        ("Jetta VI", (2010, 2018), ["Jetta"], False)]),
+    ("volkswagen/jetta", (2011, 2018), [
+        ("Jetta VI", (2011, 2018), ["Jetta"], False)]),
     ("skoda/fabia", (2010, 2021), [
         ("Fabia II", (2007, 2014), ["Fabia"], True),
         ("Fabia III", (2014, 2021), ["Fabia"], True)]),
@@ -375,8 +382,8 @@ DAILY_TABLE = [
         ("Ibiza V", (2017, 2024), ["Ibiza"], True)]),
     ("seat/ateca", (2016, 2024), [
         ("Ateca KH", (2016, 2024), ["Ateca"], True)]),
-    ("seat/alhambra", (2010, 2020), [
-        ("Alhambra II", (2010, 2020), ["Alhambra"], False)]),
+    ("seat/alhambra", (2011, 2020), [
+        ("Alhambra II", (2011, 2020), ["Alhambra"], False)]),
     ("seat/arona", (2017, 2024), [
         ("Arona KJ", (2017, 2024), ["Arona"], True)]),
     ("seat/altea", (2010, 2015), [
@@ -395,6 +402,7 @@ DAILY_TABLE = [
         ("Q5 8R", (2008, 2017), ["Q5"], False),
         ("Q5 FY", (2017, 2024), ["Q5"], False)]),
     ("bmw/x3", (2010, 2024), [
+        ("X3 E83", (2004, 2010), ["X3"], False),
         ("X3 F25", (2010, 2017), ["X3"], False),
         ("X3 G01", (2017, 2024), ["X3"], False)]),
     ("bmw/2er", (2014, 2021), [
@@ -418,8 +426,8 @@ DAILY_TABLE = [
     ("opel/zafira", (2010, 2019), [
         ("Zafira B", (2005, 2011), ["Zafira"], False),
         ("Zafira C", (2011, 2019), ["Zafira"], False)]),
-    ("opel/meriva", (2010, 2017), [
-        ("Meriva B", (2010, 2017), ["Meriva"], True)]),
+    ("opel/meriva", (2011, 2017), [
+        ("Meriva B", (2011, 2017), ["Meriva"], True)]),
     ("opel/mokka", (2012, 2019), [
         ("Mokka A", (2012, 2019), ["Mokka", "Mokka X"], True)]),
     ("opel/grandland", (2017, 2024), [
@@ -443,11 +451,11 @@ DAILY_TABLE = [
         ("508 I", (2010, 2018), ["508"], False),
         ("508 II", (2018, 2024), ["508"], False)]),
     ("peugeot/5008", (2010, 2024), [
-        ("5008 I", (2009, 2016), ["5008"], False),
+        ("5008 I", (2009, 2017), ["5008"], False),
         ("5008 II", (2017, 2024), ["5008"], False)]),
     ("renault/clio", (2010, 2024), [
-        ("Clio III", (2005, 2012), ["Clio"], True),
-        ("Clio IV", (2012, 2019), ["Clio"], True),
+        ("Clio III", (2005, 2013), ["Clio"], True),
+        ("Clio IV", (2012, 2020), ["Clio"], True),
         ("Clio V", (2019, 2024), ["Clio"], True)]),
     ("renault/megane", (2010, 2023), [
         ("Megane III", (2008, 2016), ["Megane"], False),
@@ -456,7 +464,7 @@ DAILY_TABLE = [
         ("Scenic III", (2009, 2016), ["Scenic", "Grand Scenic"], False),
         ("Scenic IV", (2016, 2022), ["Scenic", "Grand Scenic"], False)]),
     ("renault/captur", (2013, 2024), [
-        ("Captur I", (2013, 2019), ["Captur"], True),
+        ("Captur I", (2013, 2020), ["Captur"], True),
         ("Captur II", (2019, 2024), ["Captur"], True)]),
     ("renault/kadjar", (2015, 2022), [
         ("Kadjar HA", (2015, 2022), ["Kadjar"], False)]),
@@ -465,7 +473,7 @@ DAILY_TABLE = [
     ("renault/laguna", (2010, 2015), [
         ("Laguna III", (2007, 2015), ["Laguna"], False)]),
     ("renault/koleos", (2010, 2024), [
-        ("Koleos I", (2008, 2016), ["Koleos"], False),
+        ("Koleos I", (2008, 2017), ["Koleos"], False),
         ("Koleos II", (2017, 2024), ["Koleos"], False)]),
     ("renault/twingo", (2010, 2022), [
         ("Twingo II", (2007, 2014), ["Twingo"], True),
@@ -475,8 +483,8 @@ DAILY_TABLE = [
     ("citroen/c3", (2010, 2024), [
         ("C3 II", (2009, 2016), ["C3"], True),
         ("C3 III", (2016, 2024), ["C3"], True)]),
-    ("citroen/c4", (2010, 2018), [
-        ("C4 II", (2010, 2018), ["C4"], False)]),
+    ("citroen/c4", (2011, 2018), [
+        ("C4 II", (2011, 2018), ["C4"], False)]),
     ("citroen/c4-cactus", (2014, 2020), [
         ("C4 Cactus E3", (2014, 2020), ["C4 Cactus"], True)]),
     ("citroen/c5", (2010, 2017), [
@@ -491,10 +499,10 @@ DAILY_TABLE = [
         ("Berlingo II", (2008, 2018), ["Berlingo"], False),
         ("Berlingo III", (2018, 2024), ["Berlingo"], False)]),
     ("dacia/duster", (2010, 2024), [
-        ("Duster I", (2010, 2017), ["Duster"], True),
+        ("Duster I", (2010, 2018), ["Duster"], True),
         ("Duster II", (2018, 2024), ["Duster"], True)]),
-    ("dacia/sandero", (2012, 2020), [
-        ("Sandero II", (2012, 2020), ["Sandero", "Stepway"], True)]),
+    ("dacia/sandero", (2013, 2020), [
+        ("Sandero II", (2013, 2020), ["Sandero", "Stepway"], True)]),
     ("fiat/tipo", (2016, 2024), [
         ("Tipo 356", (2016, 2024), ["Tipo"], True)]),
     ("fiat/500x", (2014, 2024), [
@@ -512,8 +520,8 @@ DAILY_TABLE = [
         ("Panda 319", (2012, 2024), ["Panda"], True)]),
     ("fiat/bravo", (2010, 2014), [
         ("Bravo 198", (2007, 2014), ["Bravo"], True)]),
-    ("ford/focus", (2011, 2024), [
-        ("Focus III", (2011, 2018), ["Focus"], True),
+    ("ford/focus", (2012, 2024), [
+        ("Focus III", (2012, 2018), ["Focus"], True),
         ("Focus IV", (2018, 2024), ["Focus"], True)]),
     ("ford/fiesta", (2010, 2023), [
         ("Fiesta VI", (2008, 2017), ["Fiesta"], True),
@@ -521,8 +529,8 @@ DAILY_TABLE = [
     ("ford/mondeo", (2010, 2022), [
         ("Mondeo IV", (2007, 2014), ["Mondeo"], False),
         ("Mondeo V", (2014, 2022), ["Mondeo"], False)]),
-    ("ford/c-max", (2010, 2019), [
-        ("C-Max II", (2010, 2019), ["C-Max", "Grand C-Max"], False)]),
+    ("ford/c-max", (2011, 2019), [
+        ("C-Max II", (2011, 2019), ["C-Max", "Grand C-Max"], False)]),
     ("ford/s-max", (2010, 2022), [
         ("S-Max I", (2006, 2015), ["S-Max"], False),
         ("S-Max II", (2015, 2022), ["S-Max"], False)]),
@@ -543,26 +551,26 @@ DAILY_TABLE = [
         ("Yaris III", (2011, 2020), ["Yaris"], True),
         ("Yaris IV", (2020, 2024), ["Yaris"], True)]),
     ("toyota/rav4", (2010, 2018), [
-        ("RAV4 III", (2006, 2012), ["RAV 4"], False),
+        ("RAV4 III", (2006, 2013), ["RAV 4"], False),
         ("RAV4 IV", (2013, 2018), ["RAV 4"], False)]),
     ("toyota/avensis", (2010, 2018), [
         ("Avensis T27", (2009, 2018), ["Avensis"], False)]),
     ("toyota/verso", (2010, 2018), [
         ("Verso R2", (2009, 2018), ["Verso"], False)]),
     ("toyota/corolla", (2013, 2024), [
-        ("Corolla E170", (2013, 2018), ["Corolla"], True),
+        ("Corolla E170", (2013, 2019), ["Corolla"], True),
         ("Corolla E210", (2019, 2024), ["Corolla"], True)]),
     ("toyota/c-hr", (2016, 2024), [
         ("C-HR AX1", (2016, 2024), ["C-HR"], False)]),
-    ("kia/sportage", (2010, 2021), [
-        ("Sportage III", (2010, 2015), ["Sportage"], False),
+    ("kia/sportage", (2011, 2021), [
+        ("Sportage III", (2011, 2015), ["Sportage"], False),
         ("Sportage IV", (2015, 2021), ["Sportage"], False)]),
     ("kia/ceed", (2010, 2024), [
         ("Ceed ED", (2006, 2012), ["cee`d"], True),
         ("Ceed JD", (2012, 2018), ["cee`d"], True),
         ("Ceed CD", (2018, 2024), ["cee`d"], True)]),
-    ("kia/rio", (2011, 2022), [
-        ("Rio III", (2011, 2017), ["Rio"], True),
+    ("kia/rio", (2012, 2022), [
+        ("Rio III", (2012, 2017), ["Rio"], True),
         ("Rio IV", (2017, 2022), ["Rio"], True)]),
     ("hyundai/i30", (2010, 2024), [
         ("i30 FD", (2007, 2012), ["i30"], True),
@@ -581,12 +589,12 @@ DAILY_TABLE = [
     ("nissan/x-trail", (2010, 2022), [
         ("X-Trail T31", (2007, 2014), ["X-Trail"], False),
         ("X-Trail T32", (2014, 2022), ["X-Trail"], False)]),
-    ("nissan/micra", (2010, 2024), [
-        ("Micra K13", (2010, 2017), ["Micra"], True),
+    ("nissan/micra", (2011, 2024), [
+        ("Micra K13", (2011, 2017), ["Micra"], True),
         ("Micra K14", (2017, 2024), ["Micra"], True)]),
     ("mazda/mazda3", (2010, 2024), [
         ("Mazda3 BL", (2009, 2013), ["3"], True),
-        ("Mazda3 BM", (2013, 2018), ["3"], True),
+        ("Mazda3 BM", (2013, 2019), ["3"], True),
         ("Mazda3 BP", (2019, 2024), ["3"], True)]),
     ("mazda/mazda6", (2010, 2021), [
         ("Mazda6 GH", (2008, 2012), ["6"], True),
@@ -614,18 +622,18 @@ DAILY_TABLE = [
     ("honda/civic", (2012, 2021), [
         ("Civic IX", (2012, 2017), ["Civic"], True),
         ("Civic X", (2017, 2021), ["Civic"], True)]),
-    ("honda/cr-v", (2012, 2024), [
-        ("CR-V IV", (2012, 2018), ["CR-V"], True),
+    ("honda/cr-v", (2013, 2024), [
+        ("CR-V IV", (2013, 2018), ["CR-V"], True),
         ("CR-V V", (2018, 2024), ["CR-V"], True)]),
     ("honda/jazz", (2010, 2020), [
         ("Jazz III", (2008, 2015), ["Jazz"], True),
         ("Jazz IV", (2015, 2020), ["Jazz"], True)]),
     ("mitsubishi/asx", (2010, 2024), [
         ("ASX GA", (2010, 2024), ["ASX"], False)]),
-    ("mitsubishi/outlander", (2012, 2021), [
-        ("Outlander III", (2012, 2021), ["Outlander"], True)]),
-    ("suzuki/swift", (2010, 2024), [
-        ("Swift IV", (2010, 2017), ["Swift"], True),
+    ("mitsubishi/outlander", (2013, 2021), [
+        ("Outlander III", (2013, 2021), ["Outlander"], True)]),
+    ("suzuki/swift", (2011, 2024), [
+        ("Swift IV", (2011, 2017), ["Swift"], True),
         ("Swift V", (2017, 2024), ["Swift"], True)]),
     ("suzuki/vitara", (2015, 2024), [
         ("Vitara LY", (2015, 2024), ["Vitara"], True)]),
@@ -694,7 +702,7 @@ def test_generation_named_in_the_title_of_the_daily_and_extended_models(as24, ti
 @pytest.mark.parametrize("as24,year,title,expected", [
     ("opel/corsa", 2021, "Opel Corsa-e Elegance", None),   # the electric Corsa F reads as "Corsa E": left out
     ("opel/corsa", 2014, "Opel Corsa E 1.3 CDTI", "Corsa E"),   # change-over year: the title decides
-    ("opel/corsa", 2014, "Opel Corsa 1.3 CDTI", None),
+    ("opel/corsa", 2014, "Opel Corsa 1.3 CDTI", "Corsa D"),   # no name: the older one
     ("opel/zafira", 2011, "Opel Zafira Tourer 2.0 CDTI", "Zafira C"),
     ("opel/zafira", 2020, "Opel Zafira Tourer 2.0 CDTI", None),   # the C ends in 2019
     ("mercedes-benz/c-klasse", 2014, "Mercedes C 220 W204", "C-Klasse W204"),
@@ -734,3 +742,131 @@ def test_5008_takes_the_body_of_its_generation():
     assert [generation.get("body") for generation in peugeot_5008["generations"]] == ["van", "suv"]
     assert "body" not in peugeot_5008   # an MPV first, an SUV after 2017
     assert MODEL["volvo/v60"]["body"] == "estate"   # every V60 is an estate
+
+
+# --- 26.11.2026, Ogi: "gleda po modelu i restajlingu"; an older generation is never priced as the newer one ------
+
+AS24_URL = "https://www.autoscout24.de/angebote/bmw-x3-xdrive20d-diesel-cat_ma13gr18387ge{}va3241mt329tr480003-7"
+
+
+def name_of(generation):
+    return generation["name"] if generation else None
+
+
+@pytest.mark.parametrize("title,url,name", [
+    ("BMW X3 xDrive18d", "u", "X3 E83"),                         # no code: the older generation
+    ("BMW X3 F25 xDrive18d", "u", "X3 F25"),
+    ("BMW X3 F-25 xDrive18d", "u", "X3 F25"),                    # a hyphenated code
+    ("BMW X3 xDrive18d", AS24_URL.format(62), "X3 F25"),         # AutoScout24 files it as an F25
+    ("BMW X3 xDrive18d", AS24_URL.format(61), "X3 E83"),
+    ("BMW X3 xDrive18d", AS24_URL.format(999), "X3 E83"),        # an id we do not know: the year decides
+    ("BMW X3 E83 xDrive18d", AS24_URL.format(62), "X3 E83"),     # the title goes before the id
+    ("BMW X3 xDrive18d", None, "X3 E83"),
+])
+def test_x3_of_2010_is_the_generation_its_title_or_autoscout24_names(title, url, name):
+    assert name_of(valuation.generation_of({"year": 2010, "title": title, "url": url}, MODEL["bmw/x3"])) == name
+
+
+@pytest.mark.parametrize("year,title,url,name", [
+    (2011, "BMW X3 xDrive18d", "u", "X3 F25"),
+    (2011, "BMW X3 E83 xDrive18d", "u", None),              # the E83 ends in 2010
+    (2011, "BMW X3 xDrive18d", AS24_URL.format(61), None),
+    (2009, "BMW X3 F25 xDrive18d", "u", None),              # before the F25
+    (2017, "BMW X3 xDrive18d", "u", "X3 F25"),              # F25 or G01: the older one
+])
+def test_x3_around_its_change_over_year(year, title, url, name):
+    assert name_of(valuation.generation_of({"year": year, "title": title, "url": url}, MODEL["bmw/x3"])) == name
+
+
+@pytest.mark.parametrize("as24,year,name", [
+    ("volkswagen/golf", 2012, "Golf 6"), ("volkswagen/golf", 2020, "Golf 7"),
+    ("bmw/520", 2010, "520d E60"), ("bmw/520", 2017, "520d F10"), ("bmw/3er", 2019, "3er F30"),
+    ("bmw/1er", 2019, "1er F20"), ("audi/a6", 2018, "A6 C7"), ("volkswagen/passat", 2011, "Passat B6"),
+    ("opel/astra", 2010, "Astra H"), ("volkswagen/tiguan", 2016, "Tiguan I"), ("ford/kuga", 2020, "Kuga II"),
+    ("mercedes-benz/b-klasse", 2019, "B-Klasse W246"), ("renault/clio", 2013, "Clio III"),
+    ("bmw/3er", 2012, None),            # a year the table leaves out on purpose stays unpriced
+    ("ford/focus", 2011, None),         # the Focus II was still registered: the Focus III starts in 2012
+])
+def test_change_over_year_without_a_name_gives_the_older_generation(as24, year, name):
+    assert name_of(valuation.generation_of({"year": year, "title": ""}, MODEL[as24])) == name
+
+
+@pytest.mark.parametrize("as24,year,title,ge,name", [
+    ("volkswagen/golf", 2014, "VW Golf Cabrio 1.4 TSI", 6, None),   # a Golf 6 Cabrio of 2014 is no Golf 7
+    ("volkswagen/golf", 2013, "VW Golf VII 1.6 TDI", 6, "Golf 7"),  # the seller's title beats a wrong id
+    ("bmw/520", 2017, "BMW 520d Touring", 127, "520d G30"),
+    ("bmw/520", 2017, "BMW 520d Touring", 126, "520d F10"),
+    ("opel/astra", 2010, "Opel Astra 1.7 CDTI", 224, "Astra J"),
+    ("opel/astra", 2010, "Opel Astra 1.7 CDTI", 223, "Astra H"),
+    ("skoda/octavia", 2020, "Skoda Octavia 2.0 TDI", 294, None),    # an Octavia IV: not in the table
+    ("volkswagen/passat", 2011, "VW Passat 2.0 TDI", 216, "Passat B7"),
+    ("volkswagen/passat", 2012, "VW Passat 2.0 TDI", 215, None),    # a B6 id on a 2012 car stays off the list
+    ("bmw/1er", 2019, "BMW 116d", 193, "1er F40"),
+])
+def test_autoscout24_generation_id_places_the_car(as24, year, title, ge, name):
+    url = f"https://www.autoscout24.de/angebote/car-diesel-cat_ma1gr2ge{ge}va3-4"
+    assert name_of(valuation.generation_of({"year": year, "title": title, "url": url}, MODEL[as24])) == name
+
+
+@pytest.mark.parametrize("url", [None, "", "u", "https://www.autoscout24.de/angebote/bmw-x3-diesel-12345",
+                                 "https://www.willhaben.at/iad/gebrauchtwagen/d/auto/bmw-x3-ge61-1"])
+def test_listing_without_an_autoscout24_generation_id(url):
+    assert models.as24_generation(MODEL["bmw/x3"], url) is None
+
+
+def test_autoscout24_ids_name_generations_of_their_own_model():
+    not_in_the_table = {"Octavia IV"}   # sold from 2020: its id keeps such a car off the list
+    for as24, ids in models.AS24_GENERATIONS.items():
+        names = {generation["name"] for generation in MODEL[as24]["generations"]}
+        for name in ids.values():
+            assert name in names or name in not_in_the_table, (as24, name)
+
+
+@pytest.mark.parametrize("year,title,expected", [
+    (2010, "Opel Astra Caravan Opel Astra H", "Astra H"),   # live 26.11.2026: bought 1,500, priced as a J at 2,912
+    (2010, "Opel Astra 1.7 CDTI", "Astra H"),
+    (2010, "Opel Astra J 1.7 CDTI", "Astra J"),
+    (2011, "Opel Astra H GTC", None),
+    (2016, "Opel Astra-K 1.6 CDTI", "Astra K"),
+])
+def test_astra_h_of_2010_is_not_priced_as_an_astra_j(year, title, expected):
+    assert name_of(valuation.generation_of({"year": year, "title": title}, MODEL["opel/astra"])) == expected
+
+
+GOLF7 = GOLF["generations"][1]
+
+
+@pytest.mark.parametrize("generation,year,text,expected", [
+    (GOLF7, 2016, "VW Golf 1.6 TDI", False),           # PA: no 2016 Golf 7 ad says 7.5, 27 of 137 of 2017 do
+    (GOLF7, 2018, "VW Golf 1.6 TDI", True),
+    (GOLF7, 2017, "VW Golf 1.6 TDI", None),            # the facelift year itself: cannot tell
+    (GOLF7, 2017, "VW Golf 7.5 1.6 TDI", True),
+    (GOLF7, 2017, "Golf 7,5 Highline", True),
+    (GOLF7, 2017, "Golf VII Facelift", True),
+    (GOLF7, 2017, "Volkswagen Golf 7 restajling", True),
+    (GOLF7, 2017, "Volkswagen Golf 7 FL", True),
+    (GOLF7, 2016, "Golf 7.5 look", False),             # a facelift word before the facelift year is a look-alike
+    (GOLF7, 2013, "Golf 7.5 GTI LOOK", False),
+    (GOLF7, 2017, "VW Golf 1.5 TSI", None),            # an engine size is no "7.5"
+    (GOLF7, 2017, "VW Golf Flexfuel", None),
+    (GOLF7, 2017, None, None),
+    (MODEL["opel/mokka"]["generations"][0], 2016, "Opel Mokka X 1.6 CDTI", True),   # Opel renamed it Mokka X
+    (MODEL["opel/mokka"]["generations"][0], 2016, "Opel Mokka 1.6 CDTI", None),
+    (MODEL["opel/mokka"]["generations"][0], 2014, "Opel Mokka X 1.4 Edition", False),   # sold as "Mokka X" on PA
+    (MODEL["audi/a4"]["generations"][0], 2011, "Audi A4 2.0 TDI", False),   # the B8.5 came in 2012
+    (MODEL["audi/a4"]["generations"][0], 2012, "Audi A4 2.0 TDI", None),
+    (MODEL["audi/a4"]["generations"][0], 2012, "Audi A4 B8.5 2.0 TDI", True),
+    (MODEL["skoda/octavia"]["generations"][1], 2016, "Skoda Octavia 1.6 TDI", False),   # the facelift came in 2017
+    (MODEL["skoda/octavia"]["generations"][1], 2017, "Skoda Octavia 1.6 TDI", None),
+    (TIGUAN["generations"][0], 2012, "VW Tiguan Facelift", False),   # no facelift Serbian buyers pay for
+])
+def test_side_of_the_facelift(generation, year, text, expected):
+    assert models.after_facelift(generation, year, text) is expected
+
+
+def test_every_facelift_falls_inside_its_generation():
+    for model in models.MODELS:
+        for generation in model["generations"]:
+            if "facelift" in generation:
+                first, last = generation["years"]
+                assert first < generation["facelift"] <= last, generation["name"]

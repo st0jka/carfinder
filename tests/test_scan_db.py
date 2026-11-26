@@ -181,8 +181,10 @@ PASSAT_B8 = {"title": "VW Passat 1.4 TSI", "model": "Passat", "year": 2017, "cc"
     (foreign(fuel="petrol", **PASSAT_B8), MODEL["volkswagen/passat"], False),
     (foreign(fuel="petrol", year=2014, title="Opel Astra 1.4", make="Opel"), MODEL["opel/astra"], True),    # Astra J
     (foreign(fuel="petrol", year=2018, title="Opel Astra 1.4", make="Opel"), MODEL["opel/astra"], False),   # Astra K
-    (foreign(fuel="petrol", year=2016, title="Opel Astra 1.4", make="Opel"), MODEL["opel/astra"], False),   # J or K?
-    (foreign(fuel="petrol", year=2012), GOLF, False),                  # Golf 6 or 7: no generation, no price
+    (foreign(fuel="petrol", year=2016, title="Opel Astra 1.4", make="Opel"), MODEL["opel/astra"], True),    # J or K: J
+    (foreign(fuel="petrol", year=2016, title="Opel Astra K 1.4", make="Opel"), MODEL["opel/astra"], False),  # named K
+    (foreign(fuel="petrol", year=2014, title="Opel Astra K 1.4", make="Opel"), MODEL["opel/astra"], False),  # no K yet
+    (foreign(fuel="petrol", year=2012), GOLF, True),                   # Golf 6 or 7: the older Golf 6
     (foreign(fuel="petrol", year=2030), GOLF, False),
     (foreign(fuel="petrol"), None, False),                             # a model no longer scanned
     (foreign(fuel="diesel", **PASSAT_B8), MODEL["volkswagen/passat"], True),
@@ -251,7 +253,11 @@ def test_2010_passat_uses_its_own_b6_snapshot():
     b6 = foreign(model="Passat", year=2010)
     assert scan.snapshot_for(b6, passat) == ("Volkswagen", "Passat B6", 2009, 2011, "diesel")
     assert scan.estimate({}, b6, passat, {}) is None
-    assert scan.snapshot_for(foreign(model="Passat", year=2011), passat) == ("Volkswagen", "Passat B7", 2011, 2015, "diesel")
+    # an unnamed 2011 Passat is a B6 (Novky 24.11.2026); AutoScout24's own B7 id makes it a B7
+    assert scan.snapshot_for(foreign(model="Passat", year=2011), passat) == ("Volkswagen", "Passat B6", 2009, 2011, "diesel")
+    b7_url = "https://www.autoscout24.de/angebote/vw-passat-variant-diesel-cat_ma74gr100039ge216va1-1"
+    b7 = foreign(model="Passat", year=2011, url=b7_url)
+    assert scan.snapshot_for(b7, passat) == ("Volkswagen", "Passat B7", 2011, 2015, "diesel")
 
 
 def test_golf_plus_is_not_priced_against_the_golf():

@@ -92,7 +92,8 @@ def test_car_of_the_first_scanned_year_keeps_its_one_year_older_comparables():
     assert [c["id"] for c in scan.comparables_for({GOLF6_DIESEL: ads}, car, GOLF)] == ["2009", "2010", "2011"]
 
 
-@pytest.mark.parametrize("car", [foreign(fuel="petrol", price=500), foreign(price=500), foreign(year=2012),
+@pytest.mark.parametrize("car", [foreign(fuel="petrol", price=500), foreign(price=500),
+                                 foreign(year=2014, title="VW Golf VI"),   # the Golf 6 ends in 2013
                                  foreign(year=None),
                                  foreign(year=2030), foreign(text="Motorschaden"), {"id": "odd"}])
 def test_car_that_is_not_priced_needs_no_snapshot(car):
@@ -102,6 +103,8 @@ def test_car_that_is_not_priced_needs_no_snapshot(car):
 def test_car_is_priced_against_the_snapshot_of_its_generation_and_fuel():
     assert scan.snapshot_for(foreign(), GOLF) == GOLF7_DIESEL
     assert scan.snapshot_for(foreign(year=2010), GOLF) == GOLF6_DIESEL
+    assert scan.snapshot_for(foreign(year=2012), GOLF) == GOLF6_DIESEL   # Golf 6 or 7 without a name: the older
+    assert scan.snapshot_for(foreign(year=2012, title="VW Golf VII"), GOLF) == GOLF7_DIESEL
     assert scan.snapshot_for(foreign(fuel="petrol_lpg"), GOLF) == GOLF7_LPG
     assert scan.snapshot_for(foreign(fuel="petrol"), GOLF) == GOLF7_PETROL
 
@@ -110,7 +113,8 @@ def test_plain_petrol_needs_a_snapshot_only_for_a_petrol_generation():
     passat = foreign(title="VW Passat 1.4 TSI", model="Passat", year=2017, fuel="petrol", cc=1395, kw=110)
     assert scan.snapshot_for(passat, PASSAT) is None                  # no Passat generation sells as petrol
     assert scan.snapshot_for(dict(passat, fuel="diesel"), PASSAT) == ("Volkswagen", "Passat B8", 2014, 2023, "diesel")
-    assert scan.snapshot_for(foreign(fuel="petrol", year=2012), GOLF) is None   # Golf 6 or 7: not told apart
+    assert scan.snapshot_for(foreign(fuel="petrol", year=2012), GOLF) == ("Volkswagen", "Golf 6", 2009, 2013, "petrol")
+    assert scan.snapshot_for(foreign(fuel="petrol", year=2014, title="VW Golf VI"), GOLF) is None   # no Golf 6 then
 
 
 def test_comparables_are_every_clean_exact_match_of_the_snapshot():
@@ -203,7 +207,7 @@ def test_other_fuel_is_fetched_only_when_a_car_needs_it(conn, fetched, monkeypat
 
 
 @pytest.mark.parametrize("car", [foreign(fuel="petrol"), foreign(fuel="petrol_lpg", price=500),
-                                 foreign(fuel="petrol_lpg", year=2012), foreign(fuel="other")])
+                                 foreign(fuel="petrol_lpg", year=2014, title="VW Golf VI"), foreign(fuel="other")])
 def test_petrol_and_cars_that_are_not_priced_fetch_nothing_more(conn, fetched, monkeypatch, car):
     found_on_autoscout24(monkeypatch, car)
     run(conn)

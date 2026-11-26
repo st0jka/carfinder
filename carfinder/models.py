@@ -1,7 +1,12 @@
 """Start models (top imported used cars in Serbia, PA/CUBE H1 2026) and their generations.
 
 pa_model is the model name polovniautomobili uses; some models are split per generation there, others not.
-Years are first-registration years; neighbouring generations overlap in their change-over year.
+Years are first-registration years; neighbouring generations overlap in their change-over year. A generation runs
+until the last year its own cars were still registered in numbers (older stock sold after the successor came), and a
+first generation starts in the first year its predecessor (not in the table) was no longer registered in numbers.
+In a shared year a car is the generation its title or AutoScout24 names, else the older one (Ogi 26.11.2026).
+"facelift": the first year facelifted cars were registered in numbers, only where Serbian buyers pay clearly more
+for it on PA (research 26.11.2026).
 """
 import re
 
@@ -53,18 +58,18 @@ CORE_MODELS = [
         {"name": "Golf 6", "pa_model": "Golf 6", "years": (2008, 2013), "new_price": 21066, "new_price_estate": 22500,
          "petrol": True},
         {"name": "Golf 7", "pa_model": "Golf 7", "years": (2012, 2020), "new_price": 22500, "new_price_estate": 24000,
-         "petrol": True},
+         "petrol": True, "facelift": 2017},
         {"name": "Golf 8", "pa_model": "Golf 8", "years": (2020, 2024), "new_price": 27000, "new_price_estate": 28000,
-         "petrol": True},
+         "petrol": True, "facelift": 2024},
     ]},
     {"make": "Volkswagen", "as24": "volkswagen/polo", "mass": 1150, "generations": [
         {"name": "Polo V", "pa_model": "Polo", "years": (2009, 2017), "new_price": 14400, "petrol": True},
         {"name": "Polo VI", "pa_model": "Polo", "years": (2017, 2024), "new_price": 17500, "petrol": True},
     ]},
     {"make": "Volkswagen", "as24": "volkswagen/passat", "mass": 1550, "generations": [
-        # The B6 was still registered in 2011. An explicit B6 title is needed that year.
-        {"name": "Passat B6", "pa_model": "Passat B6", "years": (2005, 2010), "named_until": 2011,
-         "new_price": 23549, "new_price_estate": 25500},
+        # The B6 was still registered in 2011 (Novky 24.11.2026: a 2011 B6 priced as a B7 was 1,300 high).
+        {"name": "Passat B6", "pa_model": "Passat B6", "years": (2005, 2011), "new_price": 23549,
+         "new_price_estate": 25500},
         {"name": "Passat B7", "pa_model": "Passat B7", "years": (2011, 2015), "new_price": 23549,
          "new_price_estate": 25500},
         {"name": "Passat B8", "pa_model": "Passat B8", "years": (2014, 2023), "new_price": 33000,
@@ -78,23 +83,27 @@ CORE_MODELS = [
         {"name": "Octavia II", "pa_model": "Octavia", "years": (2004, 2013), "new_price": 18450,
          "new_price_estate": 20000},
         {"name": "Octavia III", "pa_model": "Octavia", "years": (2013, 2020), "new_price": 23000,
-         "new_price_estate": 24500},
+         "new_price_estate": 24500, "facelift": 2017},
     ]},
     {"make": "Škoda", "as24": "skoda/superb", "mass": 1550, "generations": [
         {"name": "Superb II", "pa_model": "Superb", "years": (2008, 2015), "new_price": 25050,
          "new_price_estate": 26000},
         {"name": "Superb III", "pa_model": "Superb", "years": (2015, 2023), "new_price": 30000,
-         "new_price_estate": 31500},
+         "new_price_estate": 31500, "facelift": 2019},
     ]},
     {"make": "Audi", "as24": "audi/a3", "mass": 1350, "generations": [
         {"name": "A3 8P", "pa_model": "A3", "years": (2003, 2013), "new_price": 24900},
         {"name": "A3 8V", "pa_model": "A3", "years": (2012, 2020), "new_price": 27000},
     ]},
     {"make": "Audi", "as24": "audi/a4", "mass": 1550, "generations": [
-        {"name": "A4 B8", "pa_model": "A4", "years": (2008, 2015), "new_price": 34650, "new_price_estate": 36250},
+        {"name": "A4 B8", "pa_model": "A4", "years": (2008, 2015), "new_price": 34650, "new_price_estate": 36250,
+         "facelift": 2012},
         {"name": "A4 B9", "pa_model": "A4", "years": (2015, 2024), "new_price": 38000, "new_price_estate": 40000},
     ]},
     {"make": "Opel", "as24": "opel/astra", "mass": 1400, "generations": [
+        # Caravan, GTC and TwinTop were built until 09/2010: 12 of 25 Astra H of 2010 were priced as Astra J
+        {"name": "Astra H", "pa_model": "Astra H", "years": (2004, 2010), "new_price": 18500,
+         "new_price_estate": 19700},
         {"name": "Astra J", "pa_model": "Astra J", "years": (2009, 2016), "new_price": 19550,
          "new_price_estate": 20800, "petrol": True},
         {"name": "Astra K", "pa_model": "Astra K", "years": (2015, 2021), "new_price": 21000,
@@ -119,22 +128,24 @@ CORE_MODELS = [
         {"name": "X1 F48", "pa_model": "X1", "years": (2015, 2022), "new_price": 31000},
     ]},
     {"make": "BMW", "as24": "bmw/520", "mass": 1650, "generations": [
-        {"name": "520d F10", "pa_model": "520", "years": (2010, 2016), "new_price": 38700, "new_price_estate": 40500},
+        # E60 and E61 were registered through 2010, the F11 Touring through 2017
+        {"name": "520d E60", "pa_model": "520", "years": (2003, 2010), "new_price": 36000, "new_price_estate": 38000},
+        {"name": "520d F10", "pa_model": "520", "years": (2010, 2017), "new_price": 38700, "new_price_estate": 40500},
         {"name": "520d G30", "pa_model": "520", "years": (2017, 2023), "new_price": 44000, "new_price_estate": 46000},
     ]},
     {"make": "BMW", "as24": "bmw/3er", "mass": 1500, "generations": [
         # 2012 is left out: the E90 and the F30 share the PA names and the 318d's 105 kW
         {"name": "3er E90", "pa_model": "316/318/320", "years": (2008, 2011), "new_price": 29500,
          "new_price_estate": 31000},
-        {"name": "3er F30", "pa_model": "316/318/320", "years": (2013, 2018), "new_price": 30000,
+        {"name": "3er F30", "pa_model": "316/318/320", "years": (2013, 2019), "new_price": 30000,
          "new_price_estate": 31500},
         {"name": "3er G20", "pa_model": "316/318/320", "years": (2019, 2024), "new_price": 34000,
          "new_price_estate": 35500},
     ]},
     {"make": "Audi", "as24": "audi/a6", "mass": 1650, "generations": [
         {"name": "A6 C6", "pa_model": "A6", "years": (2008, 2011), "new_price": 34000, "new_price_estate": 36000},
-        {"name": "A6 C7", "pa_model": "A6", "years": (2011, 2017), "new_price": 36500, "new_price_estate": 38750,
-         "new_price_hybrid": 48000},
+        {"name": "A6 C7", "pa_model": "A6", "years": (2011, 2018), "new_price": 36500, "new_price_estate": 38750,
+         "new_price_hybrid": 48000, "facelift": 2014},
         {"name": "A6 C8", "pa_model": "A6", "years": (2018, 2024), "new_price": 44000, "new_price_estate": 46000},
     ]},
     {"make": "Opel", "as24": "opel/insignia", "mass": 1550, "generations": [
@@ -146,14 +157,14 @@ CORE_MODELS = [
     {"make": "Mercedes Benz", "as24": "mercedes-benz/b-klasse", "mass": 1450, "large": True, "body": "van",
      "generations": [
         {"name": "B-Klasse W245", "pa_model": "B 180/B 200", "years": (2005, 2011), "new_price": 22500},
-        {"name": "B-Klasse W246", "pa_model": "B 180/B 200", "years": (2012, 2018), "new_price": 25000},
+        {"name": "B-Klasse W246", "pa_model": "B 180/B 200", "years": (2012, 2019), "new_price": 25000},
         {"name": "B-Klasse W247", "pa_model": "B 180/B 200", "years": (2019, 2024), "new_price": 29000},
     ]},
     # Citroen C4 Picasso II left 25.11.2026: Novky "Da mrtav je za prodaju".
     {"make": "Ford", "as24": "ford/kuga", "mass": 1650, "large": True, "generations": [
         # 2012 is the Kuga I's: the Kuga II of 2012 has the same PA name and the same 2.0 TDCi engines
         {"name": "Kuga I", "pa_model": "Kuga", "years": (2008, 2012), "new_price": 25000},
-        {"name": "Kuga II", "pa_model": "Kuga", "years": (2013, 2019), "new_price": 26000},
+        {"name": "Kuga II", "pa_model": "Kuga", "years": (2013, 2020), "new_price": 26000, "facelift": 2016},
         {"name": "Kuga III", "pa_model": "Kuga", "years": (2020, 2024), "new_price": 28000},
     ]},
     {"make": "Hyundai", "as24": "hyundai/ix35", "mass": 1600, "large": True, "generations": [
@@ -164,7 +175,7 @@ CORE_MODELS = [
     # cars at +700, ads listed 1.3x as long. Kept only if its cars pass in the live scan; otherwise it goes.
     {"make": "BMW", "as24": "bmw/1er", "mass": 1400, "trial": True, "generations": [
         # first full year: the E87 of 2011 has the same PA names and engines
-        {"name": "1er F20", "pa_model": "116/118/120", "years": (2012, 2018), "new_price": 24500},
+        {"name": "1er F20", "pa_model": "116/118/120", "years": (2012, 2019), "new_price": 24500},
         {"name": "1er F40", "pa_model": "116/118/120", "years": (2019, 2024), "new_price": 27000},
     ]},
 ]
@@ -176,7 +187,7 @@ DAILY_MODELS = [
         {"name": "Touran II", "pa_model": "Touran", "years": (2015, 2024), "new_price": 25000},
     ]},
     {"make": "Volkswagen", "as24": "volkswagen/sharan", "mass": 1750, "large": True, "body": "van", "generations": [
-        {"name": "Sharan II", "pa_model": "Sharan", "years": (2010, 2022), "new_price": 30000},
+        {"name": "Sharan II", "pa_model": "Sharan", "years": (2011, 2022), "new_price": 30000},
     ]},
     {"make": "Volkswagen", "as24": "volkswagen/caddy", "mass": 1500, "large": True, "body": "van", "generations": [
         {"name": "Caddy III", "pa_model": "Caddy", "years": (2010, 2015), "new_price": 20000},
@@ -192,7 +203,7 @@ DAILY_MODELS = [
         {"name": "CC 358", "pa_model": "Passat CC", "years": (2012, 2017), "new_price": 29700},
     ]},
     {"make": "Volkswagen", "as24": "volkswagen/jetta", "mass": 1400, "generations": [
-        {"name": "Jetta VI", "pa_model": "Jetta", "years": (2010, 2018), "new_price": 22000},
+        {"name": "Jetta VI", "pa_model": "Jetta", "years": (2011, 2018), "new_price": 22000},
     ]},
     {"make": "Škoda", "as24": "skoda/fabia", "mass": 1100, "generations": [
         {"name": "Fabia II", "pa_model": "Fabia", "years": (2007, 2014), "new_price": 11250, "new_price_estate": 11950, "petrol": True},
@@ -205,7 +216,7 @@ DAILY_MODELS = [
         {"name": "Kodiaq I", "pa_model": "Kodiaq", "years": (2016, 2024), "new_price": 30000},
     ]},
     {"make": "Škoda", "as24": "skoda/yeti", "mass": 1450, "large": True, "generations": [
-        {"name": "Yeti 5L", "pa_model": "Yeti", "years": (2010, 2017), "new_price": 21600, "petrol": True},
+        {"name": "Yeti 5L", "pa_model": "Yeti", "years": (2010, 2017), "new_price": 21600, "petrol": True, "facelift": 2013},
     ]},
     {"make": "Škoda", "as24": "skoda/karoq", "mass": 1450, "large": True, "generations": [
         {"name": "Karoq NU", "pa_model": "Karoq", "years": (2017, 2024), "new_price": 24500},
@@ -222,14 +233,15 @@ DAILY_MODELS = [
         {"name": "Leon IV", "pa_model": "Leon", "years": (2020, 2024), "new_price": 24000, "new_price_estate": 25000, "petrol": True},
     ]},
     {"make": "Seat", "as24": "seat/ibiza", "mass": 1100, "generations": [
-        {"name": "Ibiza IV", "pa_model": "Ibiza", "years": (2008, 2017), "new_price": 13950, "new_price_estate": 14600, "petrol": True},
+        {"name": "Ibiza IV", "pa_model": "Ibiza", "years": (2008, 2017), "new_price": 13950, "new_price_estate": 14600, "petrol": True,
+         "facelift": 2012},
         {"name": "Ibiza V", "pa_model": "Ibiza", "years": (2017, 2024), "new_price": 13500, "petrol": True},
     ]},
     {"make": "Seat", "as24": "seat/ateca", "mass": 1400, "large": True, "generations": [
         {"name": "Ateca KH", "pa_model": "Ateca", "years": (2016, 2024), "new_price": 23400, "petrol": True},
     ]},
     {"make": "Seat", "as24": "seat/alhambra", "mass": 1750, "large": True, "body": "van", "generations": [
-        {"name": "Alhambra II", "pa_model": "Alhambra", "years": (2010, 2020), "new_price": 29700},
+        {"name": "Alhambra II", "pa_model": "Alhambra", "years": (2011, 2020), "new_price": 29700},
     ]},
     {"make": "Seat", "as24": "seat/arona", "mass": 1200, "generations": [
         {"name": "Arona KJ", "pa_model": "Arona", "years": (2017, 2024), "new_price": 17100, "petrol": True},
@@ -256,6 +268,8 @@ DAILY_MODELS = [
         {"name": "Q5 FY", "pa_model": "Q5", "years": (2017, 2024), "new_price": 41500},
     ]},
     {"make": "BMW", "as24": "bmw/x3", "mass": 1800, "large": True, "generations": [
+        # the E83 was built until 08/2010 and the F25 sold from 11/2010: most 2010 X3 are E83 (Ogi 26.11.2026)
+        {"name": "X3 E83", "pa_model": "X3", "years": (2004, 2010), "new_price": 34000},
         {"name": "X3 F25", "pa_model": "X3", "years": (2010, 2017), "new_price": 38000},
         {"name": "X3 G01", "pa_model": "X3", "years": (2017, 2024), "new_price": 43000},
     ]},
@@ -288,10 +302,11 @@ DAILY_MODELS = [
         {"name": "Zafira C", "pa_model": "Zafira", "years": (2011, 2019), "new_price": 25000},
     ]},
     {"make": "Opel", "as24": "opel/meriva", "mass": 1400, "body": "van", "generations": [
-        {"name": "Meriva B", "pa_model": "Meriva", "years": (2010, 2017), "new_price": 19800, "petrol": True},
+        {"name": "Meriva B", "pa_model": "Meriva", "years": (2011, 2017), "new_price": 19800, "petrol": True},
     ]},
     {"make": "Opel", "as24": "opel/mokka", "mass": 1400, "generations": [
-        {"name": "Mokka A", "pa_model": "Mokka/Mokka X", "years": (2012, 2019), "new_price": 21500, "petrol": True},
+        {"name": "Mokka A", "pa_model": "Mokka/Mokka X", "years": (2012, 2019), "new_price": 21500, "petrol": True,
+         "facelift": 2016},
     ]},
     {"make": "Opel", "as24": "opel/grandland", "mass": 1450, "large": True, "generations": [
         {"name": "Grandland X", "pa_model": "Grandland X/Grandland", "years": (2017, 2024), "new_price": 27000, "petrol": True},
@@ -322,13 +337,13 @@ DAILY_MODELS = [
         {"name": "508 II", "pa_model": "508", "years": (2018, 2024), "new_price": 30000, "new_price_estate": 31000},
     ]},
     {"make": "Peugeot", "as24": "peugeot/5008", "mass": 1550, "large": True, "generations": [
-        {"name": "5008 I", "pa_model": "5008", "years": (2009, 2016), "new_price": 23400, "body": "van"},
+        {"name": "5008 I", "pa_model": "5008", "years": (2009, 2017), "new_price": 23400, "body": "van"},
         {"name": "5008 II", "pa_model": "5008", "years": (2017, 2024), "new_price": 27000, "body": "suv"},
     ]},
     {"make": "Renault", "as24": "renault/clio", "mass": 1100, "generations": [
-        {"name": "Clio III", "pa_model": "Clio", "years": (2005, 2012), "new_price": 14000, "new_price_estate": 14700, "petrol": True},
-        {"name": "Clio IV", "pa_model": "Clio", "years": (2012, 2019), "new_price": 15750, "new_price_estate": 16500, "petrol": True},
-        {"name": "Clio V", "pa_model": "Clio", "years": (2019, 2024), "new_price": 18000, "petrol": True},
+        {"name": "Clio III", "pa_model": "Clio", "years": (2005, 2013), "new_price": 14000, "new_price_estate": 14700, "petrol": True},
+        {"name": "Clio IV", "pa_model": "Clio", "years": (2012, 2020), "new_price": 15750, "new_price_estate": 16500, "petrol": True},
+        {"name": "Clio V", "pa_model": "Clio", "years": (2019, 2024), "new_price": 18000, "petrol": True, "facelift": 2023},
     ]},
     {"make": "Renault", "as24": "renault/megane", "mass": 1300, "generations": [
         {"name": "Megane III", "pa_model": "Megane", "years": (2008, 2016), "new_price": 18000, "new_price_estate": 19000},
@@ -339,7 +354,7 @@ DAILY_MODELS = [
         {"name": "Scenic IV", "pa_model": "Scenic/Grand Scenic", "years": (2016, 2022), "new_price": 24300},
     ]},
     {"make": "Renault", "as24": "renault/captur", "mass": 1200, "generations": [
-        {"name": "Captur I", "pa_model": "Captur", "years": (2013, 2019), "new_price": 18000, "petrol": True},
+        {"name": "Captur I", "pa_model": "Captur", "years": (2013, 2020), "new_price": 18000, "petrol": True, "facelift": 2017},
         {"name": "Captur II", "pa_model": "Captur", "years": (2019, 2024), "new_price": 19800, "petrol": True},
     ]},
     {"make": "Renault", "as24": "renault/kadjar", "mass": 1450, "large": True, "generations": [
@@ -352,7 +367,7 @@ DAILY_MODELS = [
         {"name": "Laguna III", "pa_model": "Laguna", "years": (2007, 2015), "new_price": 25200, "new_price_estate": 26500},
     ]},
     {"make": "Renault", "as24": "renault/koleos", "mass": 1650, "large": True, "generations": [
-        {"name": "Koleos I", "pa_model": "Koleos", "years": (2008, 2016), "new_price": 27000},
+        {"name": "Koleos I", "pa_model": "Koleos", "years": (2008, 2017), "new_price": 27000},
         {"name": "Koleos II", "pa_model": "Koleos", "years": (2017, 2024), "new_price": 31500},
     ]},
     {"make": "Renault", "as24": "renault/twingo", "mass": 950, "generations": [
@@ -367,7 +382,7 @@ DAILY_MODELS = [
         {"name": "C3 III", "pa_model": "C3", "years": (2016, 2024), "new_price": 13950, "petrol": True},
     ]},
     {"make": "Citroen", "as24": "citroen/c4", "mass": 1300, "generations": [
-        {"name": "C4 II", "pa_model": "C4", "years": (2010, 2018), "new_price": 19000},
+        {"name": "C4 II", "pa_model": "C4", "years": (2011, 2018), "new_price": 19000},
     ]},
     {"make": "Citroen", "as24": "citroen/c4-cactus", "mass": 1150, "generations": [
         {"name": "C4 Cactus E3", "pa_model": "C4 Cactus", "years": (2014, 2020), "new_price": 18000, "petrol": True},
@@ -382,18 +397,18 @@ DAILY_MODELS = [
         {"name": "C3 Aircross 2R", "pa_model": "C3 Aircross", "years": (2017, 2024), "new_price": 17500, "petrol": True},
     ]},
     {"make": "Citroen", "as24": "citroen/c5-aircross", "mass": 1500, "large": True, "generations": [
-        {"name": "C5 Aircross C84", "pa_model": "C5 Aircross", "years": (2018, 2024), "new_price": 27000},
+        {"name": "C5 Aircross C84", "pa_model": "C5 Aircross", "years": (2018, 2024), "new_price": 27000, "facelift": 2022},
     ]},
     {"make": "Citroen", "as24": "citroen/berlingo", "mass": 1450, "large": True, "body": "van", "generations": [
         {"name": "Berlingo II", "pa_model": "Berlingo", "years": (2008, 2018), "new_price": 18000},
         {"name": "Berlingo III", "pa_model": "Berlingo", "years": (2018, 2024), "new_price": 22500},
     ]},
     {"make": "Dacia", "as24": "dacia/duster", "mass": 1300, "large": True, "generations": [
-        {"name": "Duster I", "pa_model": "Duster", "years": (2010, 2017), "new_price": 13500, "petrol": True},
+        {"name": "Duster I", "pa_model": "Duster", "years": (2010, 2018), "new_price": 13500, "petrol": True},
         {"name": "Duster II", "pa_model": "Duster", "years": (2018, 2024), "new_price": 15300, "petrol": True},
     ]},
     {"make": "Dacia", "as24": "dacia/sandero", "mass": 1050, "generations": [
-        {"name": "Sandero II", "pa_model": "Sandero/Stepway", "years": (2012, 2020), "new_price": 9000, "petrol": True},
+        {"name": "Sandero II", "pa_model": "Sandero/Stepway", "years": (2013, 2020), "new_price": 9000, "petrol": True},
     ]},
     {"make": "Fiat", "as24": "fiat/tipo", "mass": 1300, "generations": [
         {"name": "Tipo 356", "pa_model": "Tipo", "years": (2016, 2024), "new_price": 18900, "new_price_estate": 19800, "petrol": True},
@@ -421,7 +436,7 @@ DAILY_MODELS = [
         {"name": "Bravo 198", "pa_model": "Bravo", "years": (2007, 2014), "new_price": 17000, "petrol": True},
     ]},
     {"make": "Ford", "as24": "ford/focus", "mass": 1350, "generations": [
-        {"name": "Focus III", "pa_model": "Focus", "years": (2011, 2018), "new_price": 20000, "new_price_estate": 21000, "petrol": True},
+        {"name": "Focus III", "pa_model": "Focus", "years": (2012, 2018), "new_price": 20000, "new_price_estate": 21000, "petrol": True},
         {"name": "Focus IV", "pa_model": "Focus", "years": (2018, 2024), "new_price": 22500, "new_price_estate": 23500, "petrol": True},
     ]},
     {"make": "Ford", "as24": "ford/fiesta", "mass": 1100, "generations": [
@@ -433,7 +448,7 @@ DAILY_MODELS = [
         {"name": "Mondeo V", "pa_model": "Mondeo", "years": (2014, 2022), "new_price": 29700, "new_price_estate": 30700},
     ]},
     {"make": "Ford", "as24": "ford/c-max", "mass": 1450, "large": True, "body": "van", "generations": [
-        {"name": "C-Max II", "pa_model": "C-Max/Grand C-Max", "years": (2010, 2019), "new_price": 20700},
+        {"name": "C-Max II", "pa_model": "C-Max/Grand C-Max", "years": (2011, 2019), "new_price": 20700},
     ]},
     {"make": "Ford", "as24": "ford/s-max", "mass": 1700, "large": True, "body": "van", "generations": [
         {"name": "S-Max I", "pa_model": "S-Max", "years": (2006, 2015), "new_price": 29000},
@@ -462,7 +477,7 @@ DAILY_MODELS = [
         {"name": "Yaris IV", "pa_model": "Yaris", "years": (2020, 2024), "new_price": 15300, "new_price_hybrid": 18900, "petrol": True},
     ]},
     {"make": "Toyota", "as24": "toyota/rav4", "mass": 1650, "large": True, "generations": [
-        {"name": "RAV4 III", "pa_model": "RAV 4", "years": (2006, 2012), "new_price": 27000},
+        {"name": "RAV4 III", "pa_model": "RAV 4", "years": (2006, 2013), "new_price": 27000},
         {"name": "RAV4 IV", "pa_model": "RAV 4", "years": (2013, 2018), "new_price": 27000},
     ]},
     {"make": "Toyota", "as24": "toyota/avensis", "mass": 1450, "generations": [
@@ -472,14 +487,14 @@ DAILY_MODELS = [
         {"name": "Verso R2", "pa_model": "Verso", "years": (2009, 2018), "new_price": 22500},
     ]},
     {"make": "Toyota", "as24": "toyota/corolla", "mass": 1350, "generations": [
-        {"name": "Corolla E170", "pa_model": "Corolla", "years": (2013, 2018), "new_price": 18000, "petrol": True},
+        {"name": "Corolla E170", "pa_model": "Corolla", "years": (2013, 2019), "new_price": 18000, "petrol": True},
         {"name": "Corolla E210", "pa_model": "Corolla", "years": (2019, 2024), "new_price": 21600, "new_price_estate": 22500, "new_price_hybrid": 24000, "petrol": True},
     ]},
     {"make": "Toyota", "as24": "toyota/c-hr", "mass": 1450, "large": True, "generations": [
         {"name": "C-HR AX1", "pa_model": "C-HR", "years": (2016, 2024), "new_price": 22500, "new_price_hybrid": 25000},
     ]},
     {"make": "Kia", "as24": "kia/sportage", "mass": 1600, "large": True, "generations": [
-        {"name": "Sportage III", "pa_model": "Sportage", "years": (2010, 2015), "new_price": 22500},
+        {"name": "Sportage III", "pa_model": "Sportage", "years": (2011, 2015), "new_price": 22500},
         {"name": "Sportage IV", "pa_model": "Sportage", "years": (2015, 2021), "new_price": 24500},
     ]},
     {"make": "Kia", "as24": "kia/ceed", "mass": 1300, "generations": [
@@ -488,7 +503,7 @@ DAILY_MODELS = [
         {"name": "Ceed CD", "pa_model": "cee`d", "years": (2018, 2024), "new_price": 20700, "new_price_estate": 21600, "petrol": True},
     ]},
     {"make": "Kia", "as24": "kia/rio", "mass": 1150, "generations": [
-        {"name": "Rio III", "pa_model": "Rio", "years": (2011, 2017), "new_price": 13000, "petrol": True},
+        {"name": "Rio III", "pa_model": "Rio", "years": (2012, 2017), "new_price": 13000, "petrol": True},
         {"name": "Rio IV", "pa_model": "Rio", "years": (2017, 2022), "new_price": 14400, "petrol": True},
     ]},
     {"make": "Hyundai", "as24": "hyundai/i30", "mass": 1300, "generations": [
@@ -515,12 +530,12 @@ DAILY_MODELS = [
         {"name": "X-Trail T32", "pa_model": "X-Trail", "years": (2014, 2022), "new_price": 28800},
     ]},
     {"make": "Nissan", "as24": "nissan/micra", "mass": 1000, "generations": [
-        {"name": "Micra K13", "pa_model": "Micra", "years": (2010, 2017), "new_price": 11000, "petrol": True},
+        {"name": "Micra K13", "pa_model": "Micra", "years": (2011, 2017), "new_price": 11000, "petrol": True},
         {"name": "Micra K14", "pa_model": "Micra", "years": (2017, 2024), "new_price": 14400, "petrol": True},
     ]},
     {"make": "Mazda", "as24": "mazda/mazda3", "mass": 1300, "generations": [
         {"name": "Mazda3 BL", "pa_model": "3", "years": (2009, 2013), "new_price": 18000, "petrol": True},
-        {"name": "Mazda3 BM", "pa_model": "3", "years": (2013, 2018), "new_price": 18900, "petrol": True},
+        {"name": "Mazda3 BM", "pa_model": "3", "years": (2013, 2019), "new_price": 18900, "petrol": True},
         {"name": "Mazda3 BP", "pa_model": "3", "years": (2019, 2024), "new_price": 21600, "petrol": True},
     ]},
     {"make": "Mazda", "as24": "mazda/mazda6", "mass": 1450, "generations": [
@@ -528,7 +543,7 @@ DAILY_MODELS = [
         {"name": "Mazda6 GJ", "pa_model": "6", "years": (2012, 2021), "new_price": 25200, "new_price_estate": 26100, "petrol": True},
     ]},
     {"make": "Mazda", "as24": "mazda/cx-5", "mass": 1550, "large": True, "generations": [
-        {"name": "CX-5 KE", "pa_model": "CX-5", "years": (2012, 2017), "new_price": 24300, "petrol": True},
+        {"name": "CX-5 KE", "pa_model": "CX-5", "years": (2012, 2017), "new_price": 24300, "petrol": True, "facelift": 2015},
         {"name": "CX-5 KF", "pa_model": "CX-5", "years": (2017, 2024), "new_price": 27000, "petrol": True},
     ]},
     {"make": "Mazda", "as24": "mazda/cx-3", "mass": 1300, "generations": [
@@ -560,7 +575,7 @@ DAILY_MODELS = [
         {"name": "Civic X", "pa_model": "Civic", "years": (2017, 2021), "new_price": 19800, "petrol": True},
     ]},
     {"make": "Honda", "as24": "honda/cr-v", "mass": 1650, "large": True, "generations": [
-        {"name": "CR-V IV", "pa_model": "CR-V", "years": (2012, 2018), "new_price": 27000, "petrol": True},
+        {"name": "CR-V IV", "pa_model": "CR-V", "years": (2013, 2018), "new_price": 27000, "petrol": True},
         {"name": "CR-V V", "pa_model": "CR-V", "years": (2018, 2024), "new_price": 30600, "petrol": True},
     ]},
     {"make": "Honda", "as24": "honda/jazz", "mass": 1100, "generations": [
@@ -571,10 +586,10 @@ DAILY_MODELS = [
         {"name": "ASX GA", "pa_model": "ASX", "years": (2010, 2024), "new_price": 21600},
     ]},
     {"make": "Mitsubishi", "as24": "mitsubishi/outlander", "mass": 1650, "large": True, "generations": [
-        {"name": "Outlander III", "pa_model": "Outlander", "years": (2012, 2021), "new_price": 28000, "petrol": True},
+        {"name": "Outlander III", "pa_model": "Outlander", "years": (2013, 2021), "new_price": 28000, "petrol": True},
     ]},
     {"make": "Suzuki", "as24": "suzuki/swift", "mass": 1000, "generations": [
-        {"name": "Swift IV", "pa_model": "Swift", "years": (2010, 2017), "new_price": 11250, "petrol": True},
+        {"name": "Swift IV", "pa_model": "Swift", "years": (2011, 2017), "new_price": 11250, "petrol": True},
         {"name": "Swift V", "pa_model": "Swift", "years": (2017, 2024), "new_price": 12600, "petrol": True},
     ]},
     {"make": "Suzuki", "as24": "suzuki/vitara", "mass": 1200, "generations": [
@@ -627,8 +642,8 @@ def drive_of(text):
     return None
 
 
-# A generation the seller names in the title ("Passat B6", "Golf VI"). The year alone can mislead: VW sold the
-# B6 into 2011, when our table already starts the B7 (Novky 24.11.2026: a 2011 "B6" priced as a B7 was 1,300 high).
+# A generation the seller names in the title ("Passat B6", "Golf VI"). The year alone cannot tell a change-over year
+# (Novky 24.11.2026: a 2011 "B6" priced as a B7 was 1,300 high).
 NAMED_GENERATIONS = {
     "volkswagen/passat": [(re.compile(r"\bb([5-9])\b"), "Passat B{}")],
     # "Golf 4 Motion" and "Golf 4-Motion" are four-wheel drive (see FOUR_BY_FOUR_WORDS), not a Golf 4
@@ -652,13 +667,14 @@ NAMED_GENERATIONS = {
     "mercedes-benz/e-klasse": [(re.compile(r"\b([ws]21[23])\b"), "E-Klasse {}")],
     "mercedes-benz/cla": [(re.compile(r"\b([cx]11[78])\b"), "CLA {}")],
     "mercedes-benz/gla": [(re.compile(r"\b(x156|h247)\b"), "GLA {}")],
-    "bmw/x3": [(re.compile(r"\b(f25|g01)\b"), "X3 {}")],
+    "bmw/x3": [(re.compile(r"\b(e83|f25|g01)\b"), "X3 {}")],
+    "opel/astra": [(re.compile(r"\bastra[ -]([hjk])\b"), "Astra {}")],
     # "Corsa-e" is the electric Corsa F: named "Corsa E", it is left out rather than priced as a Corsa E
     "opel/corsa": [(re.compile(r"\bcorsa[ -]([d-f])\b"), "Corsa {}")],
     "opel/zafira": [(re.compile(r"\bzafira[ -](tourer|family|b|c)\b"), "Zafira {}")],
 }
 ROMAN = {"iv": "4", "v": "5", "vi": "6", "vii": "7", "viii": "8"}
-GENERATION_ALIASES = {"520d F07": "520d F10", "520d F11": "520d F10", "520d G31": "520d G30",
+GENERATION_ALIASES = {"520d E61": "520d E60", "520d F07": "520d F10", "520d F11": "520d F10", "520d G31": "520d G30",
                       "3er E91": "3er E90", "3er E92": "3er E90", "3er E93": "3er E90",
                       "3er F31": "3er F30", "3er F34": "3er F30", "3er G21": "3er G20", "1er F21": "1er F20",
                       "A6 4F": "A6 C6", "A6 4G": "A6 C7", "A6 4K": "A6 C8",
@@ -668,15 +684,89 @@ GENERATION_ALIASES = {"520d F07": "520d F10", "520d F11": "520d F10", "520d G31"
                       "Zafira TOURER": "Zafira C", "Zafira FAMILY": "Zafira B"}
 
 
+BMW_HYPHENATED_CODE = re.compile(r"\b([efg])-(\d\d)\b")   # sellers also write "E-61" and "F-25"
+
+# AutoScout24's own generation id, as it stands in every listing URL ("...-cat_ma13gr18387ge61va3241..."). The seller
+# picks it, so it is wrong now and then; a title code goes first. Ids read from the cars of the 26.11.2026 database.
+AS24_GENERATION_ID = re.compile(r"-cat_ma\d+gr\d+ge(\d+)")
+AS24_GENERATIONS = {
+    "volkswagen/golf": {"6": "Golf 6", "7": "Golf 7", "8": "Golf 8"},
+    "volkswagen/polo": {"175": "Polo V", "176": "Polo VI"},
+    "volkswagen/passat": {"215": "Passat B6", "216": "Passat B7", "217": "Passat B8"},
+    "volkswagen/tiguan": {"161": "Tiguan I", "162": "Tiguan II"},
+    "skoda/octavia": {"292": "Octavia II", "293": "Octavia III", "294": "Octavia IV"},
+    "skoda/superb": {"562": "Superb II", "563": "Superb III"},
+    "audi/a3": {"152": "A3 8P", "153": "A3 8V"},
+    "audi/a4": {"133": "A4 B8", "134": "A4 B9"},
+    "opel/astra": {"223": "Astra H", "224": "Astra J", "225": "Astra K"},
+    "opel/corsa": {"264": "Corsa D", "265": "Corsa E", "266": "Corsa F"},
+    "peugeot/3008": {"1076": "3008 I", "1077": "3008 II"},
+    "bmw/x1": {"41": "X1 E84", "42": "X1 F48"},
+    "bmw/520": {"125": "520d E60", "126": "520d F10", "127": "520d G30"},
+    "bmw/3er": {"25": "3er E90", "26": "3er F30", "28": "3er G20"},
+    "audi/a6": {"143": "A6 C6", "144": "A6 C7", "145": "A6 C8"},
+    "opel/insignia": {"411": "Insignia A", "412": "Insignia B"},
+    "mercedes-benz/b-klasse": {"341": "B-Klasse W245", "342": "B-Klasse W246", "343": "B-Klasse W247"},
+    "ford/kuga": {"521": "Kuga I", "522": "Kuga II", "523": "Kuga III"},
+    "bmw/1er": {"192": "1er F20", "193": "1er F40"},
+    "volkswagen/caddy": {"383": "Caddy III", "384": "Caddy IV"},
+    "skoda/fabia": {"402": "Fabia II", "403": "Fabia III"},
+    "seat/ibiza": {"1195": "Ibiza IV", "1196": "Ibiza V"},
+    "audi/q3": {"361": "Q3 8U", "362": "Q3 F3"},
+    "bmw/x3": {"61": "X3 E83", "62": "X3 F25"},
+    "mercedes-benz/c-klasse": {"11": "C-Klasse W204", "12": "C-Klasse W205"},
+    "mercedes-benz/gla": {"571": "GLA X156", "572": "GLA H247"},
+    "peugeot/208": {"1074": "208 I", "1073": "208 II"},
+    "peugeot/508": {"1096": "508 I", "1095": "508 II"},
+    "renault/clio": {"1124": "Clio III", "1125": "Clio IV", "1126": "Clio V"},
+    "renault/captur": {"1120": "Captur I", "1121": "Captur II"},
+    "renault/twingo": {"1176": "Twingo II", "1177": "Twingo III"},
+    "ford/mondeo": {"869": "Mondeo IV", "870": "Mondeo V"},
+    "ford/s-max": {"886": "S-Max I", "887": "S-Max II"},
+    "toyota/yaris": {"1279": "Yaris II", "1280": "Yaris III", "1281": "Yaris IV"},
+    "kia/rio": {"985": "Rio III", "982": "Rio IV"},
+    "mazda/mazda3": {"1742": "Mazda3 BL", "1743": "Mazda3 BM", "1744": "Mazda3 BP"},
+    "mazda/cx-5": {"1769": "CX-5 KE", "1770": "CX-5 KF"},
+    "volvo/xc60": {"1345": "XC60 I", "1346": "XC60 II"},
+    "honda/civic": {"1978": "Civic IX", "1979": "Civic X"},
+}
+
+# What sellers write on a facelifted car: Golf "7.5", A4 "B8.5", BMW "LCI", Mercedes "Mopf", Serbian "restajling";
+# Opel renamed the facelifted Mokka "Mokka X".
+FACELIFT_WORDS = re.compile(r"\b(?:facelift|fejs ?lift|fl|lci|mopf|restyl\w*|restajl\w*|redizajn\w*|mokka x)\b"
+                            r"|\b(?:7|8|b8|b9)[.,]5\b")
+
+
 def named_generation(model, title):
     """The generation the title names, in MODELS' own naming ("Passat B6"), or None when it names none."""
-    title = (title or "").lower()
+    title = BMW_HYPHENATED_CODE.sub(r"\1\2", (title or "").lower())
     for pattern, name in NAMED_GENERATIONS.get(model["as24"], []):
         found = pattern.search(title)
         if found:
             part = found.group(1)
             generation = name.format(ROMAN.get(part, part.upper()))
             return GENERATION_ALIASES.get(generation, generation)
+    return None
+
+
+def as24_generation(model, url):
+    """The generation AutoScout24 files the listing under, in MODELS' own naming, or None when it is not known."""
+    found = AS24_GENERATION_ID.search(url or "")
+    if not found:
+        return None
+    return AS24_GENERATIONS.get(model["as24"], {}).get(found.group(1))
+
+
+def after_facelift(generation, year, text):
+    """True for a car or ad after the generation's facelift, False before it (and for a generation without one),
+    None in the facelift year itself when the text does not say."""
+    facelift = generation.get("facelift")
+    if facelift is None:
+        return False
+    if year < facelift:
+        return False   # a facelift word on a car registered before the facelift is a look-alike ("7.5 look")
+    if year > facelift or FACELIFT_WORDS.search((text or "").lower()):
+        return True
     return None
 
 

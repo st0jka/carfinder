@@ -97,7 +97,7 @@ def snapshot_of(model, generation, fuel):
     """What one PA snapshot covers: (make, PA model, first year, last year, fuel)."""
     first, last = generation["years"]
     # one year under YEAR_FROM, because a YEAR_FROM car is compared with cars a year older (valuation.year_window)
-    return model["make"], generation["pa_model"], max(first, YEAR_FROM - 1), generation.get("named_until", last), fuel
+    return model["make"], generation["pa_model"], max(first, YEAR_FROM - 1), last, fuel
 
 
 def snapshot_for(car, model):
@@ -148,6 +148,19 @@ def collect_snapshots(conn, jobs, snapshots, errors):
         snapshots[snapshot] = cars
 
 
+def same_side(model, generation, ad, facelifted):
+    """False for a PA ad of another generation, of a year two generations share without a name, or of the other side
+    of the facelift."""
+    named = models.named_generation(model, ad.get("title"))
+    if named != generation["name"] and (named or valuation.mixed_year(model, ad["year"])):
+        return False
+    ad_text = f"{ad.get('title') or ''} {ad.get('model') or ''}"
+    side = models.after_facelift(generation, ad["year"], ad_text)
+    if facelifted:
+        return side is True
+    return side is not True   # an unsaid facelift-year ad stays: a pricier facelift car never becomes the cheapest
+
+
 def comparables_for(snapshots, car, model):
     """Clean PA cars of the exact variant; empty when the generation cannot be told apart."""
     generation = valuation.generation_of(car, model)
@@ -160,14 +173,14 @@ def comparables_for(snapshots, car, model):
     year_from, year_to = valuation.year_window(model, car["year"], generation)
     snapshot = snapshots.get(snapshot_of(model, generation, car["fuel"]), [])
     cars = polovni.variant_ads(snapshot, year_from, year_to, car["cc"], car["kw"])
+    # a car from the facelift year that does not say so is priced as the older, cheaper side
+    facelifted = models.after_facelift(generation, car["year"], car.get("title")) is True
     matched = []
     for comp in cars:
         if comp.get("model") not in pa_names or not polovni.is_clean(comp) or not valuation.is_match(car, comp):
             continue
-        named = models.named_generation(model, comp.get("title"))
-        if named != generation["name"] and (named or valuation.mixed_year(model, comp["year"])):
-            continue
-        matched.append(comp)
+        if same_side(model, generation, comp, facelifted):
+            matched.append(comp)
     return matched
 
 
@@ -261,11 +274,14 @@ def speed_ads(snapshots, car, model):
         car = dict(car, body=body)
     year_from, year_to = valuation.year_window(model, car["year"], generation)
     pa_names = models.pa_names(generation["pa_model"])
+    facelifted = models.after_facelift(generation, car["year"], car.get("title")) is True
     ads = []
     for ad in snapshots.get(snapshot_of(model, generation, car["fuel"]), []):
         if ad.get("model") not in pa_names or not polovni.is_clean(ad):
             continue
         if not year_from <= (ad.get("year") or 0) <= year_to or ad.get("gearbox") != car.get("gearbox"):
+            continue
+        if not same_side(model, generation, ad, facelifted):
             continue
         if valuation.body_group(ad.get("body")) == valuation.body_group(car.get("body")):
             ads.append(ad)
